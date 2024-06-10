@@ -1,3 +1,2 @@
 # mockAI
-
-Hello World
+## The behavioral mock interview API powered by AI
