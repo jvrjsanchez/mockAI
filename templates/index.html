@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock AI App</title>
+</head>
+<body>
+    <h1>Mock AI App</h1>
+    <form method="post" enctype="multipart/form-data">
+        <textarea name="text" rows="10" cols="30"></textarea><br>
+        <input type="submit" value="Submit Text">
+    </form>
+    <form method="post" enctype="multipart/form-data" id="audio-form">
+        <input type="file" name="audio" accept="audio/*"><br>
+        <input type="submit" value="Submit Audio">
+    </form>
+    <h2>Or Record Audio:</h2>
+    <button id="recordButton">Start Recording</button>
+    <button id="stopButton" disabled>Stop Recording</button>
+    
+    {% if transcribed_text %}
+        <h2>Transcribed Text:</h2>
+        <p>{{ transcribed_text }}</p>
+    {% endif %}
+    
+    <h2>Word Count:</h2>
+    <ul>
+        {% for word, count in word_count.items() %}
+            <li>{{ word }}: {{ count }}</li>
+        {% endfor %}
+    </ul>
+    
+    {% if pauses %}
+        <h2>Detected Pauses:</h2>
+        <ul>
+            {% for pause in pauses %}
+                <li>Pause from {{ pause[0] }}ms to {{ pause[1] }}ms</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    
+    {% if score is defined %}
+        <h2>Interview Score:</h2>
+        <p>{{ score }}</p>
+    {% endif %}
+    
+    <form method="post" action="{{ url_for('restart') }}">
+        <input type="submit" value="Restart">
+    </form>
+    
+    <script>
+        let recordButton = document.getElementById('recordButton');
+        let stopButton = document.getElementById('stopButton');
+        let audioForm = document.getElementById('audio-form');
+
+        let mediaRecorder;
+        let audioChunks = [];
+
+        recordButton.addEventListener('click', async () => {
+            let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                let audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                let formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.webm');
+
+                fetch('/', {
+                    method: 'POST',
+                    body: formData
+                }).then(response => response.text())
+                  .then(data => {
+                      console.log(data);
+                      location.reload(); // Reload the page to update the word count and transcribed text
+                  });
+            };
+
+            mediaRecorder.start();
+            recordButton.disabled = true;
+            stopButton.disabled = false;
+        });
+
+        stopButton.addEventListener('click', () => {
+            mediaRecorder.stop();
+            recordButton.disabled = false;
+            stopButton.disabled = true;
+        });
+    </script>
+</body>
+</html>
