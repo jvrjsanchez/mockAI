@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "MockAI",
+  title: "mockAI",
   description: "A behavioral mock interview API powered by AI.",
 };
 
