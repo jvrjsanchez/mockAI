@@ -54,10 +54,16 @@ To run the Flask API run the following commands.
 npm run flask-dev
 ```
 
-To run the Next.js app run the following commands.
+To run the Next.js and Flask api concurrently, run the following command
 
 ```bash
 npm run dev
 ```
 
 Flask API will be running on `http://localhost:3001` and the Next.js app will be running on `http://localhost:3000`.
+
+to run just the Next.js app, run the following command.
+
+```bash
+npm run client
+```
