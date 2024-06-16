@@ -28,6 +28,7 @@ yarn-error.log*
 # local env files
 .env*.local
 
+
 # vercel
 .vercel
 
@@ -39,3 +40,5 @@ next-env.d.ts
 __pycache__/
 *.pyc
 venv/
+# .env in the api/
+api/.env
