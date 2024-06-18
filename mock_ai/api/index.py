@@ -1,12 +1,10 @@
 from flask import Flask, request, jsonify
 import os
-from deepgram import (
-    DeepgramClient,
-    PrerecordedOptions,
-    FileSource,
-)
+from deepgram import DeepgramClient, PrerecordedOptions, FileSource
 from flask_cors import CORS
 from dotenv import load_dotenv
+import sqlite3
+from database import add_email, get_all_emails
 
 app = Flask(__name__)
 CORS(app)
@@ -16,12 +14,10 @@ load_dotenv()
 # did you forget to add your API key to the .env file?
 API_KEY = os.getenv("DG_API_KEY")
 
-
 @app.route('/api', methods=['POST'])
 def api():
     data = request.get_json()
     return data
-
 
 @app.route('/api/upload_audio', methods=['POST'])
 def upload_audio():
@@ -67,10 +63,29 @@ def upload_audio():
         print(f"Exception: {e}")
         return jsonify({"error": str(e)})
 
-
 @app.route('/api/health', methods=['GET'])
 def health():
     return {"status": "ok", "message": "API listening"}
+
+@app.route('/api/add_email', methods=['POST'])
+def add_email_route():
+    data = request.get_json()
+    email = data.get('email')
+
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    email_id = add_email(email)
+
+    if email_id == "Email already exists":
+        return jsonify({"error": "Email already exists"}), 400
+
+    return jsonify({"id": email_id, "email": email})
+
+@app.route('/api/get_emails', methods=['GET'])
+def get_emails_route():
+    emails = get_all_emails()
+    return jsonify(emails)
 
 
 if __name__ == '__main__':
