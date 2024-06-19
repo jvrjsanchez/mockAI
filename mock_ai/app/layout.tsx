@@ -1,15 +1,14 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { Header , Footer } from "@/components";
-
+import type { Metadata } from 'next'
+import './globals.css'
+import { Header, Footer } from '@/components'
 
 export const metadata: Metadata = {
-  title: "mockAI",
-  description: "A behavioral mock interview API powered by AI.",
-};
+  title: 'mockAI',
+  description: 'A behavioral mock interview API powered by AI.'
+}
 
-export default function RootLayout({
-  children,
+export default function RootLayout ({
+  children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
@@ -21,5 +20,5 @@ export default function RootLayout({
         <Footer />
       </body>
     </html>
-  );
+  )
 }
