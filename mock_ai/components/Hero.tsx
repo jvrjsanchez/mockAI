@@ -1,14 +1,14 @@
-"use client";
+'use client'
 
-import Image from 'next/image';
+import Image from 'next/image'
 
-import CustomButton from './CustomButton';
+import CustomButton from './CustomButton'
 
 const Hero = () => {
   const handleScroll = () => {
 
-  };
-  
+  }
+
   return (
     <div className='hero'>
       <div className='flex-1 pt-36 padding-x'>
@@ -20,10 +20,10 @@ const Hero = () => {
           We help you prepare for your interviews by providing you with the most common questions asked by top companies.
         </p>
 
-        <CustomButton 
+        <CustomButton
           title="Start Your Interview"
           containerStyles='bg-primary-blue text-white mt-10 rounded-full'
-          handleClick={handleScroll} 
+          handleClick={handleScroll}
         />
       </div>
       <div className='hero__image-container'>
