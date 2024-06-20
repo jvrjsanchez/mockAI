@@ -1,6 +1,8 @@
 import sqlite3
 
 # Initialize or connect to the SQLite database
+
+
 def init_db():
     conn = sqlite3.connect('emails.db')
     cursor = conn.cursor()
@@ -23,8 +25,23 @@ def init_db():
         )
     ''')
 
+  # Create feedback table if it doesn't exist
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email_id INTEGER,
+            question_id INTEGER,
+            score_against_question INTEGER,
+            score_against_others INTEGER,
+            user_score INTEGER,
+            FOREIGN KEY(email_id) REFERENCES emails(id),
+            FOREIGN KEY(question_id) REFERENCES questions(id)
+        )
+    ''')
+
     conn.commit()
     conn.close()
+
 
 def add_email(email):
     conn = sqlite3.connect('emails.db')
@@ -41,6 +58,7 @@ def add_email(email):
     conn.close()
     return email_id
 
+
 def get_all_emails():
     conn = sqlite3.connect('emails.db')
     cursor = conn.cursor()
@@ -51,12 +69,14 @@ def get_all_emails():
     conn.close()
     return emails
 
+
 def add_question(question, email_id=None):
     conn = sqlite3.connect('emails.db')
     cursor = conn.cursor()
 
     try:
-        cursor.execute('INSERT INTO questions (question, email_id) VALUES (?, ?)', (question, email_id))
+        cursor.execute(
+            'INSERT INTO questions (question, email_id) VALUES (?, ?)', (question, email_id))
         conn.commit()
     except sqlite3.IntegrityError:
         conn.close()
@@ -65,6 +85,7 @@ def add_question(question, email_id=None):
     question_id = cursor.lastrowid
     conn.close()
     return question_id
+
 
 def get_all_questions():
     conn = sqlite3.connect('emails.db')
@@ -76,11 +97,14 @@ def get_all_questions():
     conn.close()
     return questions
 
+
 # Initialize the database when this script is executed directly
 if __name__ == '__main__':
     init_db()
 
 # Close the database connection
+
+
 def close_db():
     conn = sqlite3.connect('emails.db')
     conn.close()
