@@ -76,9 +76,9 @@ def get_all_questions():
     conn.close()
     return questions
 
-# Initialize the database when this script is executed directly
-if __name__ == '__main__':
-    init_db()
+print(__name__)
+
+
 
 # Close the database connection
 def close_db():

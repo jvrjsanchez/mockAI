@@ -3,7 +3,7 @@ import os
 from deepgram import DeepgramClient, PrerecordedOptions, FileSource
 from flask_cors import CORS
 from dotenv import load_dotenv
-from database import add_email, get_all_emails, add_question, get_all_questions
+from database import add_email, get_all_emails, add_question, get_all_questions, init_db
 
 app = Flask(__name__)
 CORS(app)
@@ -107,5 +107,7 @@ def get_questions_route():
     questions = get_all_questions()
     return jsonify(questions)
 
+# Initialize the database when this script is executed directly
 if __name__ == '__main__':
+    init_db()
     app.run(port=3001, debug=True)
