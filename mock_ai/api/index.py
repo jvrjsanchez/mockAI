@@ -10,13 +10,44 @@ CORS(app)
 
 load_dotenv()
 
-# did you forget to add your API key to the .env file?
+# NOTE did you forget to add your API key to the .env file?
+#      - path: mock_ai/api/.env
 API_KEY = os.getenv("DG_API_KEY")
+
+# TODO: create a function that saves the feedback to the sqlite database 'feedback' table.
+
+
+def analyze_audio(response):
+    transcription = response['results']['channels'][0]['alternatives'][0]['transcript']
+    filler_words = ['um', 'uh', 'like', 'you know', 'so']
+    filler_count = {word: 0 for word in filler_words}
+
+    for word in filler_words:
+        filler_count[word] = transcription.lower().count(word)
+
+    word_timestamps = response['results']['channels'][0]['alternatives'][0]['words']
+    pauses = []
+    for i in range(1, len(word_timestamps)):
+        prev_word_end = word_timestamps[i-1]['end']
+        current_word_start = word_timestamps[i]['start']
+        pause_duration = current_word_start - prev_word_end
+        if pause_duration > 10:
+            pauses.append(pause_duration)
+
+    result = {
+        'filler_word_count': filler_count,
+        'long_pauses': len(pauses),
+        'pause_durations': pauses
+    }
+
+    return jsonify(result)
+
 
 @app.route('/api', methods=['POST'])
 def api():
     data = request.get_json()
     return jsonify(data)
+
 
 @app.route('/api/upload_audio', methods=['POST'])
 def upload_audio():
@@ -45,26 +76,29 @@ def upload_audio():
         options = PrerecordedOptions(
             model="nova-2",
             smart_format=True,
-            # intents=True,
-            # summarize="v2",
-            # topics=True,
+            punctuate=True,
+            filler_words=True,
+            utterances=True,
+            utt_split=10000
         )
 
         # STEP 3: Call the transcribe_file method with the audio payload and options
         response = deepgram.listen.prerecorded.v(
             "1").transcribe_file(payload, options)
 
+        return analyze_audio(response)
+
         # STEP 4: Print the response
-        print(response.to_json(indent=4))
-        return jsonify(response.to_json(indent=4))
 
     except Exception as e:
         print(f"Exception: {e}")
         return jsonify({"error": str(e)})
 
+
 @app.route('/api/health', methods=['GET'])
 def health():
     return {"status": "ok", "message": "API listening"}
+
 
 @app.route('/api/add_email', methods=['POST'])
 def add_email_route():
@@ -81,10 +115,12 @@ def add_email_route():
 
     return jsonify({"id": email_id, "email": email})
 
+
 @app.route('/api/get_emails', methods=['GET'])
 def get_emails_route():
     emails = get_all_emails()
     return jsonify(emails)
+
 
 @app.route('/api/add_question', methods=['POST'])
 def add_question_route():
@@ -102,10 +138,12 @@ def add_question_route():
 
     return jsonify({"id": question_id, "question": question, "email_id": email_id})
 
+
 @app.route('/api/get_questions', methods=['GET'])
 def get_questions_route():
     questions = get_all_questions()
     return jsonify(questions)
+
 
 if __name__ == '__main__':
     app.run(port=3001, debug=True)
