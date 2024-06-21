@@ -3,6 +3,7 @@ import os
 from deepgram import DeepgramClient, PrerecordedOptions, FileSource  # type: ignore
 from flask_cors import CORS
 from dotenv import load_dotenv  # type: ignore
+from audio_analysis import analyze_audio
 from database import init_db, add_user, get_all_users, add_question, get_all_questions
 
 app = Flask(__name__)
@@ -10,8 +11,6 @@ CORS(app)
 
 load_dotenv()
 
-# Initialize the database
-init_db()
 
 # Initialize the database
 init_db()
@@ -21,32 +20,6 @@ init_db()
 API_KEY = os.getenv("DG_API_KEY")
 
 # TODO: create a function that saves the feedback to the sqlite database 'feedback' table.
-
-
-def analyze_audio(response):
-    transcription = response['results']['channels'][0]['alternatives'][0]['transcript']
-    filler_words = ['um', 'uh', 'like', 'you know', 'so']
-    filler_count = {word: 0 for word in filler_words}
-
-    for word in filler_words:
-        filler_count[word] = transcription.lower().count(word)
-
-    word_timestamps = response['results']['channels'][0]['alternatives'][0]['words']
-    pauses = []
-    for i in range(1, len(word_timestamps)):
-        prev_word_end = word_timestamps[i-1]['end']
-        current_word_start = word_timestamps[i]['start']
-        pause_duration = current_word_start - prev_word_end
-        if pause_duration > 10:
-            pauses.append(pause_duration)
-
-    result = {
-        'filler_word_count': filler_count,
-        'long_pauses': len(pauses),
-        'pause_durations': pauses
-    }
-
-    return jsonify(result)
 
 
 @app.route('/api', methods=['POST'])
@@ -122,6 +95,7 @@ def add_email_route():
     return jsonify({"id": email_id, "email": email})
 
 
+# TODO: Possibly protect this route. OR take it out of a route so it isn't accessible.
 @app.route('/api/get_users', methods=['GET'])
 def get_emails_route():
     emails = get_all_users()
