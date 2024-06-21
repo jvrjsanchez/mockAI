@@ -6,14 +6,14 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Initialize or connect to the SQLite database
 def init_db():
-    with sqlite3.connect('emails.db') as conn:
+    with sqlite3.connect('MockAI.db') as conn:
         cursor = conn.cursor()
         
-        # Create emails table if it doesn't exist
+        # Create users table if it doesn't exist
         cursor.execute('''
-            CREATE TABLE IF NOT EXISTS emails (
+            CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT NOT NULL UNIQUE
+                user TEXT NOT NULL UNIQUE
             )
         ''')
 
@@ -21,41 +21,39 @@ def init_db():
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS questions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                question TEXT NOT NULL,
-                email_id INTEGER,
-                FOREIGN KEY (email_id) REFERENCES emails(id)
+                question TEXT NOT NULL
             )
         ''')
 
         conn.commit()
         logging.info("Database initialized successfully.")
 
-def add_email(email):
+def add_user(user):
     try:
-        with sqlite3.connect('emails.db') as conn:
+        with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
-            cursor.execute('INSERT INTO emails (email) VALUES (?)', (email,))
+            cursor.execute('INSERT INTO users (user) VALUES (?)', (user,))
             conn.commit()
-            email_id = cursor.lastrowid
-            logging.info(f"Added email: {email} with id: {email_id}")
-            return email_id
+            user_id = cursor.lastrowid
+            logging.info(f"Added user: {user} with id: {user_id}")
+            return user_id
     except sqlite3.IntegrityError as e:
         logging.error(f"IntegrityError: {e}")
-        return "Email already exists"
+        return "User already exists"
 
-def get_all_emails():
-    with sqlite3.connect('emails.db') as conn:
+def get_all_users():
+    with sqlite3.connect('MockAI.db') as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT id, email FROM emails')
-        emails = cursor.fetchall()
-        logging.info("Retrieved all emails")
-        return emails
+        cursor.execute('SELECT id, user FROM users')
+        users = cursor.fetchall()
+        logging.info("Retrieved all users")
+        return users
 
-def add_question(question, email_id=None):
+def add_question(question):
     try:
-        with sqlite3.connect('emails.db') as conn:
+        with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
-            cursor.execute('INSERT INTO questions (question, email_id) VALUES (?, ?)', (question, email_id))
+            cursor.execute('INSERT INTO questions (question) VALUES (?)', (question,))
             conn.commit()
             question_id = cursor.lastrowid
             logging.info(f"Added question: {question} with id: {question_id}")
@@ -65,9 +63,9 @@ def add_question(question, email_id=None):
         return "Question already exists"
 
 def get_all_questions():
-    with sqlite3.connect('emails.db') as conn:
+    with sqlite3.connect('MockAI.db') as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT id, question, email_id FROM questions')
+        cursor.execute('SELECT id, question FROM questions')
         questions = cursor.fetchall()
         logging.info("Retrieved all questions")
         return questions
