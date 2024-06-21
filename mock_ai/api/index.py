@@ -12,9 +12,6 @@ CORS(app)
 load_dotenv()
 
 
-# Initialize the database
-init_db()
-
 # NOTE did you forget to add your API key to the .env file?
 #      - path: mock_ai/api/.env
 API_KEY = os.getenv("DG_API_KEY")
@@ -62,12 +59,13 @@ def upload_audio():
         )
 
         # STEP 3: Call the transcribe_file method with the audio payload and options
+
         response = deepgram.listen.prerecorded.v(
             "1").transcribe_file(payload, options)
 
-        return analyze_audio(response)
+        # TODO: We also need to store some of the data.
 
-        # STEP 4: Print the response
+        return analyze_audio(response)
 
     except Exception as e:
         print(f"Exception: {e}")
