@@ -57,7 +57,6 @@ def upload_audio():
         response = deepgram.listen.prerecorded.v(
             "1").transcribe_file(payload, options)
 
-        # STEP 4: Print the response
         print(response.to_json(indent=4))
         return jsonify(response.to_json(indent=4))
 
