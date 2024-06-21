@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { Header, Footer } from '@/components'
+import React from 'react'
 
 export const metadata: Metadata = {
   title: 'mockAI',
