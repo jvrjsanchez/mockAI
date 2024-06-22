@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify
 import os
-from deepgram import DeepgramClient, PrerecordedOptions, FileSource # type: ignore
+from deepgram import DeepgramClient, PrerecordedOptions, FileSource  # type: ignore
 from flask_cors import CORS
-from dotenv import load_dotenv # type: ignore
+from dotenv import load_dotenv  # type: ignore
+from audio_analysis import analyze_audio
 from database import init_db, add_user, get_all_users, add_question, get_all_questions
 
 app = Flask(__name__)
@@ -10,16 +11,19 @@ CORS(app)
 
 load_dotenv()
 
-# Initialize the database
-init_db()
 
-# did you forget to add your API key to the .env file?
+# NOTE did you forget to add your API key to the .env file?
+#      - path: mock_ai/api/.env
 API_KEY = os.getenv("DG_API_KEY")
+
+# TODO: create a function that saves the feedback to the sqlite database 'feedback' table.
+
 
 @app.route('/api', methods=['POST'])
 def api():
     data = request.get_json()
     return jsonify(data)
+
 
 @app.route('/api/upload_audio', methods=['POST'])
 def upload_audio():
@@ -48,25 +52,30 @@ def upload_audio():
         options = PrerecordedOptions(
             model="nova-2",
             smart_format=True,
-            # intents=True,
-            # summarize="v2",
-            # topics=True,
+            punctuate=True,
+            filler_words=True,
+            utterances=True,
+            utt_split=10000
         )
 
         # STEP 3: Call the transcribe_file method with the audio payload and options
+
         response = deepgram.listen.prerecorded.v(
             "1").transcribe_file(payload, options)
 
-        print(response.to_json(indent=4))
-        return jsonify(response.to_json(indent=4))
+        # TODO: We also need to store some of the data.
+
+        return analyze_audio(response)
 
     except Exception as e:
         print(f"Exception: {e}")
         return jsonify({"error": str(e)})
 
+
 @app.route('/api/health', methods=['GET'])
 def health():
     return {"status": "ok", "message": "API listening"}
+
 
 @app.route('/api/add_user', methods=['POST'])
 def add_email_route():
@@ -83,10 +92,13 @@ def add_email_route():
 
     return jsonify({"id": email_id, "email": email})
 
+
+# TODO: Possibly protect this route. OR take it out of a route so it isn't accessible.
 @app.route('/api/get_users', methods=['GET'])
 def get_emails_route():
     emails = get_all_users()
     return jsonify(emails)
+
 
 @app.route('/api/add_question', methods=['POST'])
 def add_question_route():
@@ -103,10 +115,12 @@ def add_question_route():
 
     return jsonify({"id": question_id, "question": question})
 
+
 @app.route('/api/get_questions', methods=['GET'])
 def get_questions_route():
     questions = get_all_questions()
     return jsonify(questions)
+
 
 # Initialize the database when this script is executed directly
 if __name__ == '__main__':

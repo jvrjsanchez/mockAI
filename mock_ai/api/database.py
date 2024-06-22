@@ -5,10 +5,12 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 # Initialize or connect to the SQLite database
+
+
 def init_db():
     with sqlite3.connect('MockAI.db') as conn:
         cursor = conn.cursor()
-        
+
         # Create users table if it doesn't exist
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
@@ -28,6 +30,7 @@ def init_db():
         conn.commit()
         logging.info("Database initialized successfully.")
 
+
 def add_user(user):
     try:
         with sqlite3.connect('MockAI.db') as conn:
@@ -41,6 +44,7 @@ def add_user(user):
         logging.error(f"IntegrityError: {e}")
         return "User already exists"
 
+
 def get_all_users():
     with sqlite3.connect('MockAI.db') as conn:
         cursor = conn.cursor()
@@ -49,11 +53,13 @@ def get_all_users():
         logging.info("Retrieved all users")
         return users
 
+
 def add_question(question):
     try:
         with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
-            cursor.execute('INSERT INTO questions (question) VALUES (?)', (question,))
+            cursor.execute(
+                'INSERT INTO questions (question) VALUES (?)', (question,))
             conn.commit()
             question_id = cursor.lastrowid
             logging.info(f"Added question: {question} with id: {question_id}")
@@ -62,6 +68,7 @@ def add_question(question):
         logging.error(f"IntegrityError: {e}")
         return "Question already exists"
 
+
 def get_all_questions():
     with sqlite3.connect('MockAI.db') as conn:
         cursor = conn.cursor()
@@ -69,6 +76,7 @@ def get_all_questions():
         questions = cursor.fetchall()
         logging.info("Retrieved all questions")
         return questions
+
 
 # Initialize the database when this script is executed directly
 if __name__ == '__main__':
