@@ -6,9 +6,9 @@ import Link from 'next/link'
 //import CustomButton from './CustomButton'
 
 const Hero = () => {
-  const handleScroll = () => {
+  //const handleScroll = () => {
 
-  }
+  //}
 
   const { user, error, isLoading } = useUser()
   
@@ -23,11 +23,11 @@ const Hero = () => {
           We help you prepare for your interviews by providing you with the most common questions asked by top companies.
         </p>
 
-        <Link
+        <a
           href='/api/auth/login'
           title="Start Your Interview"
           className='bg-primary-blue text-white mt-10 rounded-full'
-        >Start Your Interview</Link>
+        >Start Your Interview</a>
       </div>
       <div className='hero__image-container'>
         <div className='hero__image'>

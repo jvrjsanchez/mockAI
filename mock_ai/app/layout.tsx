@@ -15,14 +15,14 @@ export default function RootLayout ({
   children: React.ReactNode;
 }>) {
   return (
-    <UserProvider>
       <html lang="en">
+      <UserProvider>
         <body className='relative'>
           <Header />
           {children}
           <Footer />
         </body>
+      </UserProvider>
       </html>
-    </UserProvider>
   )
 }
