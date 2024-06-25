@@ -52,10 +52,16 @@ def upload_audio():
         options = PrerecordedOptions(
             model="nova-2",
             smart_format=True,
+<<<<<<< HEAD
             punctuate=True,
             filler_words=True,
             utterances=True,
             utt_split=10000
+=======
+            intents=True,
+            summarize="v2",
+            topics=True,
+>>>>>>> 6eb35cf (updates)
         )
 
         # STEP 3: Call the transcribe_file method with the audio payload and options
