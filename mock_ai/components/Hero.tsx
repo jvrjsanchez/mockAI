@@ -1,7 +1,7 @@
 'use client'
-import { useUser } from '@auth0/nextjs-auth0/client'
+//import { useUser } from '@auth0/nextjs-auth0/client'
 import Image from 'next/image'
-import Link from 'next/link'
+//import Link from 'next/link'
 
 //import CustomButton from './CustomButton'
 
@@ -10,8 +10,8 @@ const Hero = () => {
 
   //}
 
-  const { user, error, isLoading } = useUser()
-  
+  //const { user, error, isLoading } = useUser()
+
   return (
     <div className='hero'>
       <div className='flex-1 pt-36 padding-x'>
@@ -24,7 +24,7 @@ const Hero = () => {
         </p>
 
         <a
-          href='/api/auth/login'
+          href='/interview'
           title="Start Your Interview"
           className='bg-primary-blue text-white mt-10 rounded-full'
         >Start Your Interview</a>

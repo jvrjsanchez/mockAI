@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 
-import CustomButton from './CustomButton'
+//import CustomButton from './CustomButton'
 
 const Header = () => {
   return (
@@ -10,8 +10,7 @@ const Header = () => {
                 <Link href='/' className='flex justify-center items-center'>
                     <Image src='/mockAILogo.jpeg' alt='mockAI' width={118} height={18} />
                 </Link>
-
-                <CustomButton title='Sign In' containerStyles='text-white bg-primary-blue rounded-full min-w-[130px]' />
+                <a title='Sign In' href='/interview'>Let's Interview</a>
             </nav>
         </header>
   )
