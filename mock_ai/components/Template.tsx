@@ -1,20 +1,20 @@
 'use client'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import Image from 'next/image'
-//import Link from 'next/link'
+// import Link from 'next/link'
 
-//import CustomButton from './CustomButton'
+// import CustomButton from './CustomButton'
 
 const Template = () => {
-  //const handleScroll = () => {
+  // const handleScroll = () => {
 
-  //}
+  // }
 
   const { user, error, isLoading } = useUser()
 
   if (isLoading) return <div>Loading...</div>
   console.log(user)
-  
+
   return (
     <div className='hero'>
       <div className='flex-1 pt-36 padding-x'>

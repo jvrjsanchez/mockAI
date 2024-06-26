@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 
 const Interview = () => {
-  const [transcript, setTranscript] = useState('');
+  const [transcript, setTranscript] = useState('')
 
   const handleStart = async () => {
   }
