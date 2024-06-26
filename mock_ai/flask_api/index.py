@@ -19,13 +19,13 @@ API_KEY = os.getenv("DG_API_KEY")
 # TODO: create a function that saves the feedback to the sqlite database 'feedback' table.
 
 
-@app.route('/api', methods=['POST'])
+@app.route('/service', methods=['POST'])
 def api():
     data = request.get_json()
     return jsonify(data)
 
 
-@app.route('/api/upload_audio', methods=['POST'])
+@app.route('/service/upload_audio', methods=['POST'])
 def upload_audio():
     if 'audio' not in request.files:
         return "No audio file provided", 400
@@ -72,12 +72,12 @@ def upload_audio():
         return jsonify({"error": str(e)})
 
 
-@app.route('/api/health', methods=['GET'])
+@app.route('/service/health', methods=['GET'])
 def health():
     return {"status": "ok", "message": "API listening"}
 
 
-@app.route('/api/add_user', methods=['POST'])
+@app.route('/service/add_user', methods=['POST'])
 def add_email_route():
     data = request.get_json()
     email = data.get('email')
@@ -94,13 +94,13 @@ def add_email_route():
 
 
 # TODO: Possibly protect this route. OR take it out of a route so it isn't accessible.
-@app.route('/api/get_users', methods=['GET'])
+@app.route('/service/get_users', methods=['GET'])
 def get_emails_route():
     emails = get_all_users()
     return jsonify(emails)
 
 
-@app.route('/api/add_question', methods=['POST'])
+@app.route('/service/add_question', methods=['POST'])
 def add_question_route():
     data = request.get_json()
     question = data.get('question')
@@ -116,7 +116,7 @@ def add_question_route():
     return jsonify({"id": question_id, "question": question})
 
 
-@app.route('/api/get_questions', methods=['GET'])
+@app.route('/service/get_questions', methods=['GET'])
 def get_questions_route():
     questions = get_all_questions()
     return jsonify(questions)
