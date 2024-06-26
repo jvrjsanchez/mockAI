@@ -3,8 +3,8 @@ import os
 from deepgram import DeepgramClient, PrerecordedOptions, FileSource  # type: ignore
 from flask_cors import CORS
 from dotenv import load_dotenv  # type: ignore
-from audio_analysis import analyze_audio
-from database import init_db, add_user, get_all_users, add_question, get_all_questions
+from mock_ai.api.audio_analysis import analyze_audio
+from mock_ai.api.database import init_db, add_user, get_all_users, add_question, get_all_questions
 
 app = Flask(__name__)
 CORS(app)
@@ -52,16 +52,16 @@ def upload_audio():
         options = PrerecordedOptions(
             model="nova-2",
             smart_format=True,
-<<<<<<< HEAD
+            << << << < HEAD
             punctuate=True,
             filler_words=True,
             utterances=True,
             utt_split=10000
-=======
+            == == == =
             intents=True,
             summarize="v2",
             topics=True,
->>>>>>> 6eb35cf (updates)
+            >>>>>> > 6eb35cf(updates)
         )
 
         # STEP 3: Call the transcribe_file method with the audio payload and options
