@@ -1,4 +1,4 @@
-import Hero from './Hero'
+import Template from './Template'
 import CustomButton from './CustomButton'
 import Header from './Header'
 import Footer from './Footer'
@@ -7,7 +7,7 @@ import Results from './Results'
 
 export {
   Header,
-  Hero,
+  Template,
   CustomButton,
   Interview,
   Results,

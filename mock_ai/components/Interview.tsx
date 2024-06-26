@@ -5,7 +5,6 @@ const Interview = () => {
   const [transcript, setTranscript] = useState('');
 
   const handleStart = async () => {
-
   }
 
   return (
