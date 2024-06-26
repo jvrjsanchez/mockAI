@@ -26,12 +26,12 @@ const VoiceRecorder: React.FC = () => {
   const stopRecording = () => {
     Voice.stop()
     setRecording(false)
-  };
+  }
 
   const analyzeResponse = async () => {
     try {
-      const response = await axios.post('/api/analyze', { transcript });
-      setAnalysis(response.data.analysis);
+      const response = await axios.post('/api/analyze', { transcript })
+      setAnalysis(response.data.analysis)
     } catch (error) {
       console.error(error)
     }
