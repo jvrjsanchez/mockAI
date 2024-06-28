@@ -1,10 +1,11 @@
+"use client"
 import React, { useEffect, useState } from 'react'
 
 const Results = () => {
   const [results, setResults] = useState([])
 
   useEffect(() => {
-    fetch('')
+    fetch('http://localhost:3001/api/index')
   }, [])
 
   return (

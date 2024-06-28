@@ -1,5 +1,3 @@
-import Image from 'next/image'
-
 import Interview from '@/components/Interview'
 
 export default function interview () {
