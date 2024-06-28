@@ -1,6 +1,6 @@
 "use client";
-import { useRef, useState, useEffect } from 'react';
-import axios from 'axios';
+import { useRef, useState, useEffect } from "react";
+import axios from "axios";
 
 declare global {
   interface Window {
@@ -12,26 +12,29 @@ export default function VoiceRecorder() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingComplete, setRecordingComplete] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [transcript, setTranscript] = useState('');
-  
+  const [transcript, setTranscript] = useState("");
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recognitionRef = useRef<any>(null);
 
   const startRecording = () => {
     setIsRecording(true);
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .then((stream) => {
         const mediaRecorder = new MediaRecorder(stream);
         mediaRecorderRef.current = mediaRecorder;
         mediaRecorder.start();
 
-        mediaRecorder.addEventListener('dataavailable', event => {
+        mediaRecorder.addEventListener("dataavailable", (event) => {
           audioChunksRef.current.push(event.data);
         });
 
-        mediaRecorder.addEventListener('stop', () => {
-          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        mediaRecorder.addEventListener("stop", () => {
+          const audioBlob = new Blob(audioChunksRef.current, {
+            type: "audio/wav",
+          });
           const audioUrl = URL.createObjectURL(audioBlob);
           setAudioUrl(audioUrl);
           uploadAudio(audioBlob);
@@ -43,7 +46,8 @@ export default function VoiceRecorder() {
     recognitionRef.current.interimResults = true;
 
     recognitionRef.current.onresult = (event: any) => {
-      const { transcript } = event.results[event.results.length - 1][0];
+      const { transcript } =
+        event.results[event.results.length - 1][0];
       setTranscript(transcript);
     };
 
@@ -79,16 +83,16 @@ export default function VoiceRecorder() {
 
   const uploadAudio = async (audioBlob: Blob) => {
     const formData = new FormData();
-    formData.append('file', audioBlob, 'audio.wav');
+    formData.append("audio", audioBlob, "audio.wav");
 
     try {
-      await axios.post('/service/upload_audio', formData, {
+      await axios.post("/service/upload_audio", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          "Content-Type": "multipart/form-data",
+        },
       });
     } catch (error) {
-      console.error('Error uploading audio file:', error);
+      console.error("Error uploading audio file:", error);
     }
   };
 
@@ -132,7 +136,10 @@ export default function VoiceRecorder() {
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path fill="white" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                <path
+                  fill="white"
+                  d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"
+                />
               </svg>
             </button>
           ) : (
