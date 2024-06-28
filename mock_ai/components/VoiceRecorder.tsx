@@ -104,8 +104,8 @@ export default function VoiceRecorder() {
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {recordingComplete
-                    ? "Thanks for talking."
-                    : "Start speaking..."}
+                    ? "Thank you for your interview."
+                    : "What are your thoughts on this question?...."}
                 </p>
               </div>
               {isRecording && (
