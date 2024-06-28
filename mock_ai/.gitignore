@@ -37,9 +37,9 @@ yarn-error.log*
 next-env.d.ts
 
 # python
-__pycache__/
-*.pyc
+flask_api/__pycache__/
+flask_api/*.pyc
 venv/
-api/.env
+flask_api/.env
 
 

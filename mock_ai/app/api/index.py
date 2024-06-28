@@ -3,8 +3,8 @@ import os
 from deepgram import DeepgramClient, PrerecordedOptions, FileSource  # type: ignore
 from flask_cors import CORS
 from dotenv import load_dotenv  # type: ignore
-from audio_analysis import analyze_audio
-from database import init_db, add_user, get_all_users, add_question, get_all_questions
+from mock_ai.api.audio_analysis import analyze_audio
+from mock_ai.api.database import init_db, add_user, get_all_users, add_question, get_all_questions
 
 app = Flask(__name__)
 CORS(app)
@@ -55,7 +55,10 @@ def upload_audio():
             punctuate=True,
             filler_words=True,
             utterances=True,
-            utt_split=10000
+            utt_split=10000,
+            intents=True,
+            summarize="v2",
+            topics=True,
         )
 
         # STEP 3: Call the transcribe_file method with the audio payload and options

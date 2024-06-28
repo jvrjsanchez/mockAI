@@ -28,14 +28,21 @@ This README will be updated throughout the development process. The following is
 ├── liftoff (<- Just a reference)
 ├── mock_ai
 │   ├── README.md
-│   ├── api (<- Flask API)
+│   ├── flask_api (<- Flask API)
 │   │   ├── index.py
 │   │   ├── env.example
 │   │   ├── .env *
+│   │   ├── tmp
 │   │   ├── audio_analysis.py
 │   │   ├── database.py
-│   │   ├── sample.response.json
+│   │   ├── sample-data
 │   ├── app
+│   │   ├── api
+│   │   ├── interview
+│   │   ├── results
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
 │   ├── components
 │   ├── next-env.d.ts
 │   ├── next.config.mjs
@@ -87,7 +94,7 @@ To set up the project, follow these steps:
 
 To set up the necessary environment variables:
 
-1. Navigate to the `api` directory within the project.
+1. Navigate to the `flask_api` directory within the project.
 2. Locate the `.env.example` file. This file contains a template of the environment variables required by the project.
 3. Create a new file named `.env` in the same directory.
 4. Copy the contents of `.env.example` into your `.env` file.

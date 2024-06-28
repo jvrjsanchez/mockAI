@@ -1,0 +1,148 @@
+{
+  "metadata": {
+    "transaction_key": "deprecated",
+    "request_id": "bcd22daf-0fde-42d5-a018-e204bd3ca7d2",
+    "sha256": "f7bdcd8e89df3692fd910c3d85d3b581ae00a16257cebb6215f523032c0a0020",
+    "created": "2024-06-16T01:49:18.470Z",
+    "duration": 10.0,
+    "channels": 1,
+    "models": ["30089e05-99d1-4376-b32e-c263170674af"],
+    "model_info": {
+      "30089e05-99d1-4376-b32e-c263170674af": {
+        "name": "2-general-nova",
+        "version": "2024-01-09.29447",
+        "arch": "nova-2"
+      }
+    }
+  },
+  "results": {
+    "channels": [
+      {
+        "alternatives": [
+          {
+            "transcript": "Yo. Yo. Yo. I don't know if it's recording me right now.",
+            "confidence": 0.9965984,
+            "words": [
+              {
+                "word": "yo",
+                "start": 5.8399997,
+                "end": 6.24,
+                "confidence": 0.9882412,
+                "punctuated_word": "Yo."
+              },
+              {
+                "word": "yo",
+                "start": 6.24,
+                "end": 6.56,
+                "confidence": 0.997001,
+                "punctuated_word": "Yo."
+              },
+              {
+                "word": "yo",
+                "start": 6.56,
+                "end": 7.04,
+                "confidence": 0.9979958,
+                "punctuated_word": "Yo."
+              },
+              {
+                "word": "i",
+                "start": 7.04,
+                "end": 7.2799997,
+                "confidence": 0.9884327,
+                "punctuated_word": "I"
+              },
+              {
+                "word": "don't",
+                "start": 7.2799997,
+                "end": 7.44,
+                "confidence": 0.9998802,
+                "punctuated_word": "don't"
+              },
+              {
+                "word": "know",
+                "start": 7.44,
+                "end": 7.52,
+                "confidence": 0.99935883,
+                "punctuated_word": "know"
+              },
+              {
+                "word": "if",
+                "start": 7.52,
+                "end": 7.68,
+                "confidence": 0.99911076,
+                "punctuated_word": "if"
+              },
+              {
+                "word": "it's",
+                "start": 7.68,
+                "end": 7.9199996,
+                "confidence": 0.8317739,
+                "punctuated_word": "it's"
+              },
+              {
+                "word": "recording",
+                "start": 7.9199996,
+                "end": 8.4,
+                "confidence": 0.7461508,
+                "punctuated_word": "recording"
+              },
+              {
+                "word": "me",
+                "start": 8.4,
+                "end": 8.559999,
+                "confidence": 0.98132974,
+                "punctuated_word": "me"
+              },
+              {
+                "word": "right",
+                "start": 8.559999,
+                "end": 8.72,
+                "confidence": 0.99123794,
+                "punctuated_word": "right"
+              },
+              {
+                "word": "now",
+                "start": 8.72,
+                "end": 9.22,
+                "confidence": 0.9965984,
+                "punctuated_word": "now."
+              }
+            ],
+            "paragraphs": {
+              "transcript": "\nYo. Yo. Yo. I don't know if it's recording me right now.",
+              "paragraphs": [
+                {
+                  "sentences": [
+                    {
+                      "text": "Yo.",
+                      "start": 5.8399997,
+                      "end": 6.24
+                    },
+                    {
+                      "text": "Yo.",
+                      "start": 6.24,
+                      "end": 6.56
+                    },
+                    {
+                      "text": "Yo.",
+                      "start": 6.56,
+                      "end": 7.04
+                    },
+                    {
+                      "text": "I don't know if it's recording me right now.",
+                      "start": 7.04,
+                      "end": 9.22
+                    }
+                  ],
+                  "start": 5.8399997,
+                  "end": 9.22,
+                  "num_words": 12
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
