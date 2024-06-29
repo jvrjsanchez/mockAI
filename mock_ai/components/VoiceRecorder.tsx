@@ -79,7 +79,7 @@ export default function VoiceRecorder() {
 
   const uploadAudio = async (audioBlob: Blob) => {
     const formData = new FormData();
-    formData.append('file', audioBlob, 'audio.wav');
+    formData.append('audio', audioBlob, 'audio.wav');
 
     try {
       await axios.post('/service/upload_audio', formData, {
