@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
+import FillerCount from "./FillerCount";
 import axios from "axios";
 
 declare global {
@@ -8,11 +9,26 @@ declare global {
   }
 }
 
+export type Feedback = {
+  filler_word_count: {
+    like: number;
+    so: number;
+    uh: number;
+    um: number;
+    "you know": number;
+  };
+  long_pauses: number;
+  pause_durations: number[];
+};
+
 export default function VoiceRecorder() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingComplete, setRecordingComplete] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [transcript, setTranscript] = useState("");
+  const [cumulativeTranscript, setCumulativeTranscript] =
+    useState("");
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -45,9 +61,9 @@ export default function VoiceRecorder() {
     recognitionRef.current.continuous = true;
     recognitionRef.current.interimResults = true;
 
-    recognitionRef.current.onresult = (event: any) => {
-      const { transcript } =
-        event.results[event.results.length - 1][0];
+    recognitionRef.current.onresult = async (event: any) => {
+      const { transcript } = event.results[0][0];
+      console.log(event.results[0][0].transcript);
       setTranscript(transcript);
     };
 
@@ -65,6 +81,10 @@ export default function VoiceRecorder() {
   const stopRecording = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
+
+      mediaRecorderRef.current.stream
+        .getTracks()
+        .forEach((track) => track.stop());
     }
     if (recognitionRef.current) {
       recognitionRef.current.stop();
@@ -86,15 +106,21 @@ export default function VoiceRecorder() {
     formData.append("audio", audioBlob, "audio.wav");
 
     try {
-      await axios.post("/service/upload_audio", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axios.post(
+        "/service/upload_audio",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      setFeedback(response.data);
     } catch (error) {
       console.error("Error uploading audio file:", error);
     }
   };
+  console.log(feedback);
 
   return (
     <div className="flex items-center justify-center h-screen w-full">
@@ -160,6 +186,9 @@ export default function VoiceRecorder() {
             </button>
           )}
           {audioUrl && <audio src={audioUrl} controls />}
+
+          {/* Render the filler word count */}
+          {feedback && <FillerCount feedback={feedback} />}
         </div>
       </div>
     </div>
