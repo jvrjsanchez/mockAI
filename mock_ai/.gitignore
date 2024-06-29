@@ -39,6 +39,7 @@ next-env.d.ts
 # python
 flask_api/__pycache__/
 flask_api/*.pyc
+myenv/
 venv/
 flask_api/.env
 

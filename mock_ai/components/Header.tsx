@@ -14,6 +14,8 @@ const Header = () => {
         </Link>
         {isLoading ? (
           <div>Loading...</div>
+        ) : error ? (
+          <div>Error: {error.message} </div>
         ) : user ? (
           <div className='flex items-center'>
             <span style={{margin: '10px'}} className='mr-4'>{user.name}</span>
