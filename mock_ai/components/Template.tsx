@@ -1,8 +1,6 @@
 'use client'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import Image from 'next/image'
-import Link from 'next/link'
-// import Link from 'next/link'
 
 // import CustomButton from './CustomButton'
 
