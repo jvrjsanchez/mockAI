@@ -18,7 +18,7 @@ const Template = () => {
     <div className='hero'>
       <div className='flex-1 pt-36 padding-x'>
         <h1 className='hero__title'>
-          Interview confidently with the help of AI!
+          Interview confidently with the help of A.I.!
         </h1>
 
         <p className='hero__subtitle'>
