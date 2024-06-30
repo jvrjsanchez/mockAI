@@ -1,126 +1,57 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import useUploadAudio from "@/hooks/useUpload";
 import FillerCount from "./FillerCount";
-import axios from "axios";
-
-declare global {
-  interface Window {
-    webkitSpeechRecognition: any;
-  }
-}
-
-export type Feedback = {
-  filler_word_count: {
-    like: number;
-    so: number;
-    uh: number;
-    um: number;
-    "you know": number;
-  };
-  long_pauses: number;
-  pause_durations: number[];
-};
+import { Feedback } from "@/types";
 
 export default function VoiceRecorder() {
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingComplete, setRecordingComplete] = useState(false);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [transcript, setTranscript] = useState("");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const recognitionRef = useRef<any>(null);
+  const {
+    isRecording,
+    recordingComplete,
+    audioUrl,
+    transcript,
+    startRecording,
+    stopRecording,
+    audioBlob,
+  } = useVoiceRecorder()!;
 
-  const startRecording = () => {
-    setIsRecording(true);
-    audioChunksRef.current = [];
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then((stream) => {
-        const mediaRecorder = new MediaRecorder(stream);
-        mediaRecorderRef.current = mediaRecorder;
-        mediaRecorder.start();
+  const { uploadAudio, isLoading, error } = useUploadAudio();
 
-        mediaRecorder.addEventListener("dataavailable", (event) => {
-          audioChunksRef.current.push(event.data);
-        });
-
-        mediaRecorder.addEventListener("stop", () => {
-          const audioBlob = new Blob(audioChunksRef.current, {
-            type: "audio/wav",
-          });
-          const audioUrl = URL.createObjectURL(audioBlob);
-          setAudioUrl(audioUrl);
-          uploadAudio(audioBlob);
-        });
-      });
-
-    recognitionRef.current = new window.webkitSpeechRecognition();
-    recognitionRef.current.continuous = true;
-    recognitionRef.current.interimResults = true;
-
-    recognitionRef.current.onresult = async (event: any) => {
-      const { transcript } =
-        event.results[event.results.length - 1][0];
-      console.log(transcript);
-      setTranscript(transcript);
-    };
-
-    recognitionRef.current.start();
-  };
-
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
+  const handleUpload = async (audioBlob: Blob) => {
+    uploadAudio(
+      audioBlob!,
+      (data) => {
+        console.log(data);
+        setFeedback(data);
+        setShowFeedback(true);
+      },
+      (error) => {
+        console.error("Error uploading audio file:", error);
+        setFeedback(null);
+        setShowFeedback(false);
       }
-    };
-  }, []);
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-
-      mediaRecorderRef.current.stream
-        .getTracks()
-        .forEach((track) => track.stop());
-    }
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
-    setRecordingComplete(true);
+    );
   };
 
-  const handleToggleRecording = () => {
+  const handleToggleRecording = async () => {
     if (!isRecording) {
       startRecording();
     } else {
       stopRecording();
     }
-    setIsRecording(!isRecording);
   };
 
-  const uploadAudio = async (audioBlob: Blob) => {
-    const formData = new FormData();
-    formData.append("audio", audioBlob, "audio.wav");
-
-    try {
-      const response = await axios.post(
-        "/service/upload_audio",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      setFeedback(response.data);
-    } catch (error) {
-      console.error("Error uploading audio file:", error);
+  useEffect(() => {
+    if (recordingComplete && audioBlob) {
+      // reset feedback
+      setFeedback(null);
+      handleUpload(audioBlob);
     }
-  };
-  console.log(feedback);
+  }, [recordingComplete, audioBlob]);
 
   return (
     <div className="flex items-center justify-center h-screen w-full">
@@ -144,14 +75,19 @@ export default function VoiceRecorder() {
             </div>
 
             {transcript && (
-              <div className="border rounded-md p-2 h-fullm mt-4">
+              <div className="border rounded-md p-2 h-full  mt-4">
                 <p className="mb-0">{transcript}</p>
+              </div>
+            )}
+            {audioUrl && (
+              <div className="mt-4">
+                <audio className="w-full" src={audioUrl} controls />
               </div>
             )}
           </div>
         )}
 
-        <div className="flex items-center w-full">
+        <div className="flex items-center w-full justify-center mt-6">
           {isRecording ? (
             <button
               onClick={handleToggleRecording}
@@ -185,10 +121,36 @@ export default function VoiceRecorder() {
               </svg>
             </button>
           )}
-          {audioUrl && <audio src={audioUrl} controls />}
 
           {/* Render the filler word count */}
-          {feedback && <FillerCount feedback={feedback} />}
+          {isLoading && (
+            <div className="flex items-center mt-6 space-x-2">
+              <svg
+                className="animate-spin h-5 w-5 text-gray-600"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291l1.42 1.42A8 8 0 014 12H0c0 3.314 1.344 6.314 3.512 8.512z"
+                ></path>
+              </svg>
+              <span className="text-gray-600">Uploading...</span>
+            </div>
+          )}
+          {feedback && showFeedback && (
+            <FillerCount feedback={feedback} />
+          )}
         </div>
       </div>
     </div>
