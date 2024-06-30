@@ -26,8 +26,6 @@ export default function VoiceRecorder() {
   const [recordingComplete, setRecordingComplete] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [transcript, setTranscript] = useState("");
-  const [cumulativeTranscript, setCumulativeTranscript] =
-    useState("");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -36,6 +34,7 @@ export default function VoiceRecorder() {
 
   const startRecording = () => {
     setIsRecording(true);
+    audioChunksRef.current = [];
     navigator.mediaDevices
       .getUserMedia({ audio: true })
       .then((stream) => {
@@ -62,8 +61,9 @@ export default function VoiceRecorder() {
     recognitionRef.current.interimResults = true;
 
     recognitionRef.current.onresult = async (event: any) => {
-      const { transcript } = event.results[0][0];
-      console.log(event.results[0][0].transcript);
+      const { transcript } =
+        event.results[event.results.length - 1][0];
+      console.log(transcript);
       setTranscript(transcript);
     };
 
@@ -130,12 +130,12 @@ export default function VoiceRecorder() {
             <div className="flex-1 flex w-full justify-between">
               <div className="space-y-1">
                 <p className="text-sm font-medium leading-none">
-                  {recordingComplete ? "Recorded" : "Recording"}
+                  {isRecording ? "Recording" : "Recorded"}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {recordingComplete
-                    ? "Thank you for your interview."
-                    : "What are your thoughts on this question?...."}
+                  {isRecording
+                    ? "What are your thoughts on this question?...."
+                    : "Thank you for your interview."}
                 </p>
               </div>
               {isRecording && (
