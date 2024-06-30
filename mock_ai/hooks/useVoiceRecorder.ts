@@ -11,6 +11,7 @@ export const useVoiceRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingComplete, setRecordingComplete] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [transcript, setTranscript] = useState("");
 
   // For Media Recorder
@@ -21,11 +22,6 @@ export const useVoiceRecorder = () => {
   // For Speech Recognition
   // https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition
   const recognitionRef = useRef<any>(null);
-
-  if (!("webkitSpeechRecognition" in window)) {
-    console.log("Speech recognition not supported");
-    return;
-  }
 
   async function initializeMediaRecorder() {
     // Clear previous audio chunks so the next recording is clean.
@@ -47,6 +43,7 @@ export const useVoiceRecorder = () => {
         });
         const audioUrl = URL.createObjectURL(audioBlob);
         setAudioUrl(audioUrl);
+        setAudioBlob(audioBlob);
 
         mediaRecorder.removeEventListener(
           "dataavailable",
@@ -134,5 +131,6 @@ export const useVoiceRecorder = () => {
     stopRecording,
     audioUrl,
     transcript,
+    audioBlob,
   };
 };
