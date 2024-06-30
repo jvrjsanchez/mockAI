@@ -1,5 +1,6 @@
 'use client'
 import { useUser } from '@auth0/nextjs-auth0/client'
+import Questions from './Questions'
 import VoiceRecorder from './VoiceRecorder'
 
 const Interview = () => {
@@ -27,10 +28,13 @@ const Interview = () => {
     )
   } else {
     return (
-      <div className='hero'>
+      <div className='hero flex flex-col sm:flex-row'>
         <div className='flex-1 pt-36 padding-x'>
           <h1 className='text-2xl font-bold'>Interview Meeting Room</h1>
-          <VoiceRecorder />
+          <div className='flex flex-row'>
+            <Questions onSelect={setSelectedQuestion} />
+            <VoiceRecorder selectedQuestion={selectedQuestion} />
+          </div>
           <button className='bg-primary-blue text-white mt-10 rounded-full'>
             <a href='/results'>View Results</a>
           </button>
