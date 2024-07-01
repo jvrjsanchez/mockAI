@@ -1,168 +1,156 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
+import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import useUploadAudio from "@/hooks/useUpload";
+import FillerCount from "./FillerCount";
+import { Feedback } from "@/types";
 
-declare global {
-  interface Window {
-    webkitSpeechRecognition: any;
-  }
-}
+export default function VoiceRecorder() {
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
 
-export default function VoiceRecorder({ selectedQuestion }: { selectedQuestion: string}) {
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingComplete, setRecordingComplete] = useState(false);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [transcript, setTranscript] = useState("");
+  const {
+    isRecording,
+    recordingComplete,
+    audioUrl,
+    transcript,
+    startRecording,
+    stopRecording,
+    audioBlob,
+  } = useVoiceRecorder()!;
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const recognitionRef = useRef<any>(null);
+  const { uploadAudio, isLoading, error } = useUploadAudio();
 
-  const startRecording = () => {
-    setIsRecording(true);
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then((stream) => {
-        const mediaRecorder = new MediaRecorder(stream);
-        mediaRecorderRef.current = mediaRecorder;
-        mediaRecorder.start();
-
-        mediaRecorder.addEventListener("dataavailable", (event) => {
-          audioChunksRef.current.push(event.data);
-        });
-
-        mediaRecorder.addEventListener("stop", () => {
-          const audioBlob = new Blob(audioChunksRef.current, {
-            type: "audio/wav",
-          });
-          const audioUrl = URL.createObjectURL(audioBlob);
-          setAudioUrl(audioUrl);
-          uploadAudio(audioBlob);
-        });
-      });
-
-    recognitionRef.current = new window.webkitSpeechRecognition();
-    recognitionRef.current.continuous = true;
-    recognitionRef.current.interimResults = true;
-
-    recognitionRef.current.onresult = (event: any) => {
-      const { transcript } =
-        event.results[event.results.length - 1][0];
-      setTranscript(transcript);
-    };
-
-    recognitionRef.current.start();
-  };
-
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
+  const handleUpload = async (audioBlob: Blob) => {
+    uploadAudio(
+      audioBlob!,
+      (data) => {
+        console.log(data);
+        setFeedback(data);
+        setShowFeedback(true);
+      },
+      (error) => {
+        console.error("Error uploading audio file:", error);
+        setFeedback(null);
+        setShowFeedback(false);
       }
-    };
-  }, []);
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-    }
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
-    setRecordingComplete(true);
+    );
   };
 
-  const handleToggleRecording = () => {
+  const handleToggleRecording = async () => {
     if (!isRecording) {
       startRecording();
     } else {
       stopRecording();
     }
-    setIsRecording(!isRecording);
   };
 
-  const uploadAudio = async (audioBlob: Blob) => {
-    const formData = new FormData();
-    formData.append("audio", audioBlob, "audio.wav");
-
-    try {
-      await axios.post("/service/upload_audio", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-    } catch (error) {
-      console.error("Error uploading audio file:", error);
+  useEffect(() => {
+    if (recordingComplete && audioBlob) {
+      // reset feedback
+      setFeedback(null);
+      handleUpload(audioBlob);
     }
-  };
+  }, [recordingComplete, audioBlob]);
 
   return (
-    <div className="w-1/2 p-4">
-      {selectedQuestion && <h2 className="text-xl font-bold mb-4">{selectedQuestion}</h2>}
-      <div className="flex items-center justify-center h-screen w-full">
-        <div className="w-full">
-          {(isRecording || transcript) && (
-            <div className="w-1/4 m-auto rounded-md border p-4 bg-white">
-              <div className="flex-1 flex w-full justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {recordingComplete ? "Recorded" : "Recording"}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {recordingComplete
-                      ? "Thank you for your interview."
-                      : "What are your thoughts on this question?...."}
-                  </p>
-                </div>
-                {isRecording && (
-                  <div className="rounded-full w-4 h-4 bg-red-400 animate-pulse" />
-                )}
+    <div className="flex items-center justify-center h-screen w-full">
+      <div className="w-full">
+        {(isRecording || transcript) && (
+          <div className="w-1/4 m-auto rounded-md border p-4 bg-white">
+            <div className="flex-1 flex w-full justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium leading-none">
+                  {isRecording ? "Recording" : "Recorded"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {isRecording
+                    ? "What are your thoughts on this question?...."
+                    : "Thank you for your interview."}
+                </p>
               </div>
-
-              {transcript && (
-                <div className="border rounded-md p-2 h-fullm mt-4">
-                  <p className="mb-0">{transcript}</p>
-                </div>
+              {isRecording && (
+                <div className="rounded-full w-4 h-4 bg-red-400 animate-pulse" />
               )}
             </div>
+
+            {transcript && (
+              <div className="border rounded-md p-2 h-full  mt-4">
+                <p className="mb-0">{transcript}</p>
+              </div>
+            )}
+            {audioUrl && (
+              <div className="mt-4">
+                <audio className="w-full" src={audioUrl} controls />
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex items-center w-full justify-center mt-6">
+          {isRecording ? (
+            <button
+              onClick={handleToggleRecording}
+              className="mt-10 m-auto flex items-center justify-center bg-red-400 hover:bg-red-500 rounded-full w-20 h-20 focus:outline-none"
+            >
+              <svg
+                className="h-12 w-12"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill="white"
+                  d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"
+                />
+              </svg>
+            </button>
+          ) : (
+            <button
+              onClick={handleToggleRecording}
+              className="mt-10 m-auto flex items-center justify-center bg-blue-400 hover:bg-blue-500 rounded-full w-20 h-20 focus:outline-none"
+            >
+              <svg
+                viewBox="0 0 256 256"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-12 h-12 text-white"
+              >
+                <path
+                  fill="currentColor"
+                  d="M128 176a48.05 48.05 0 0 0 48-48V64a48 48 0 0 0-96 0v64a48.05 48.05 0 0 0 48 48ZM96 64a32 32 0 0 1 64 0v64a32 32 0 0 1-64 0Zm40 143.6V232a8 8 0 0 1-16 0v-24.4A80.11 80.11 0 0 1 48 128a8 8 0 0 1 16 0a64 64 0 0 0 128 0a8 8 0 0 1 16 0a80.11 80.11 0 0 1-72 79.6Z"
+                />
+              </svg>
+            </button>
           )}
 
-          <div className="flex items-center w-full">
-            {isRecording ? (
-              <button
-                onClick={handleToggleRecording}
-                className="mt-10 m-auto flex items-center justify-center bg-red-400 hover:bg-red-500 rounded-full w-20 h-20 focus:outline-none"
+          {/* Render the filler word count */}
+          {isLoading && (
+            <div className="flex items-center mt-6 space-x-2">
+              <svg
+                className="animate-spin h-5 w-5 text-gray-600"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
               >
-                <svg
-                  className="h-12 w-12"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fill="white"
-                    d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"
-                  />
-                </svg>
-              </button>
-            ) : (
-              <button
-                onClick={handleToggleRecording}
-                className="mt-10 m-auto flex items-center justify-center bg-blue-400 hover:bg-blue-500 rounded-full w-20 h-20 focus:outline-none"
-              >
-                <svg
-                  viewBox="0 0 256 256"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-12 h-12 text-white"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M128 176a48.05 48.05 0 0 0 48-48V64a48 48 0 0 0-96 0v64a48.05 48.05 0 0 0 48 48ZM96 64a32 32 0 0 1 64 0v64a32 32 0 0 1-64 0Zm40 143.6V232a8 8 0 0 1-16 0v-24.4A80.11 80.11 0 0 1 48 128a8 8 0 0 1 16 0a64 64 0 0 0 128 0a8 8 0 0 1 16 0a80.11 80.11 0 0 1-72 79.6Z"
-                  />
-                </svg>
-              </button>
-            )}
-            {audioUrl && <audio src={audioUrl} controls />}
-          </div>
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291l1.42 1.42A8 8 0 014 12H0c0 3.314 1.344 6.314 3.512 8.512z"
+                ></path>
+              </svg>
+              <span className="text-gray-600">Uploading...</span>
+            </div>
+          )}
+          {feedback && showFeedback && (
+            <FillerCount feedback={feedback} />
+          )}
         </div>
       </div>
     </div>

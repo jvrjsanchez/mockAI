@@ -2,9 +2,11 @@
 import { useUser } from '@auth0/nextjs-auth0/client'
 import Questions from './Questions'
 import VoiceRecorder from './VoiceRecorder'
+import { useState } from 'react'
 
 const Interview = () => {
   const { user, error, isLoading } = useUser()
+  const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null)
 
   if (isLoading) {
     return <div>Loading...</div>
@@ -32,7 +34,7 @@ const Interview = () => {
         <div className='flex-1 pt-36 padding-x'>
           <h1 className='text-2xl font-bold'>Interview Meeting Room</h1>
           <div className='flex flex-row'>
-            <Questions onSelect={setSelectedQuestion} />
+            <Questions onSelectQuestion={setSelectedQuestion} />
             <VoiceRecorder selectedQuestion={selectedQuestion} />
           </div>
           <button className='bg-primary-blue text-white mt-10 rounded-full'>

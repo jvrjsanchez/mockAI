@@ -2,37 +2,39 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 
-interface Question {
-  id: number;
-  text: string;
-}
-
-const Questions = ({ onSelect }: { onSelect: (question: string) => void }) => {
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [selectedQuestion, setSelectedQuestion] = useState<string>('');
+const Questions = ({ onSelectQuestion }: { onSelectQuestion: (question: string) => void }) => {
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null);
 
   useEffect(() => {
-    axios.get('/service/get_questions')
-      .then(response => setQuestions(response.data))
-      .catch(error => console.error('Error fetching questions:', error));
+    const fetchQuestions = async () => {
+      try {
+        const response = await axios.get('/service/get_questions');
+        setQuestions(response.data);
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+      }
+    };
+
+    fetchQuestions();
   }, []);
 
   const handleQuestionClick = (question: string) => {
     setSelectedQuestion(question);
-    onSelect(question);
+    onSelectQuestion(question);
   };
 
   return (
     <div className="w-1/2 p-4 border-r border-gray-300">
-      <h2 className="text-xl font-bold mb-4">Select a Question</h2>
+      <h2 className="text-xl font-bold mb-4">Choose an Interview Question</h2>
       <ul>
-        {questions.map((question) => (
+        {questions.map((question, index) => (
           <li
-            key={question.id}
-            className={`cursor-pointer p-2 ${selectedQuestion === question.text ? 'bg-gray-200' : ''}`}
-            onClick={() => handleQuestionClick(question.text)}
+            key={index}
+            className={`cursor-pointer p-2 ${selectedQuestion === question ? 'bg-gray-200' : ''}`}
+            onClick={() => handleQuestionClick(question)}
           >
-            {question.text}
+            {question}
           </li>
         ))}
       </ul>
