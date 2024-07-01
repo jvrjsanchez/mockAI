@@ -5,7 +5,12 @@ import useUploadAudio from "@/hooks/useUpload";
 import FillerCount from "./FillerCount";
 import { Feedback } from "@/types";
 
-export default function VoiceRecorder() {
+interface VoiceRecorderProps {
+  selectedQuestion: string;
+  user: any;
+}
+
+export default function VoiceRecorder({ selectedQuestion, user }: VoiceRecorderProps) {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
 
@@ -19,22 +24,27 @@ export default function VoiceRecorder() {
     audioBlob,
   } = useVoiceRecorder()!;
 
-  const { uploadAudio, isLoading, error } = useUploadAudio();
+  const { isLoading, error } = useUploadAudio();
 
   const handleUpload = async (audioBlob: Blob) => {
-    uploadAudio(
-      audioBlob!,
-      (data) => {
-        console.log(data);
-        setFeedback(data);
-        setShowFeedback(true);
-      },
-      (error) => {
-        console.error("Error uploading audio file:", error);
-        setFeedback(null);
-        setShowFeedback(false);
-      }
-    );
+    const formData = new FormData();
+    formData.append('audio', audioBlob);
+    formData.append('user', user.email);
+    formData.append('question', selectedQuestion);
+
+    try {
+      const response = await fetch('http://localhost:3001/service/upload_audio', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      setFeedback(data);
+      setShowFeedback(true);
+    } catch (error) {
+      console.error("Error uploading audio file:", error);
+      setFeedback(null);
+      setShowFeedback(false);
+    }
   };
 
   const handleToggleRecording = async () => {

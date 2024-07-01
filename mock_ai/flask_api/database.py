@@ -27,6 +27,20 @@ def init_db():
             )
         ''')
 
+        # Create results table if it doesn't exist
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS results (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user TEXT NOT NULL,
+                question TEXT NOT NULL,
+                score REAL NOT NULL,
+                transcript TEXT NOT NULL,
+                filler_words TEXT NOT NULL,
+                long_pauses TEXT NOT NULL,
+                FOREIGN KEY (user) REFERENCES users (user)
+            )
+        ''')
+
         conn.commit()
         logging.info("Database initialized successfully.")
 
