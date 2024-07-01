@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { Feedback } from "./VoiceRecorder";
+import { Feedback } from "@/types";
 
 interface FillerCountProps {
   feedback: Feedback;

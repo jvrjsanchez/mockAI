@@ -2,17 +2,13 @@
 import { useUser } from '@auth0/nextjs-auth0/client'
 import Image from 'next/image'
 
-// import CustomButton from './CustomButton'
-
 const Template = () => {
-  // const handleScroll = () => {
-
-  // }
-
   const { user, error, isLoading } = useUser()
 
   if (isLoading) return <div>Loading...</div>
   console.log(user)
+
+  if (error) return <div>Error: {error.message}</div>
 
   return (
     <div className='hero'>
