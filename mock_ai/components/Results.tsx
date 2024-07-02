@@ -9,7 +9,7 @@ const Results = () => {
   const [saveResults, setSaveResults] = useState(false)
 
   useEffect(() => {
-    axios.get('/service/get_results')
+    axios.get('/service/get_results',  {headers: {'Content-Type': 'application/json'}})
       .then(response => {
         setResults(response.data)
       })
