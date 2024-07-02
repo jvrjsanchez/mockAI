@@ -1,4 +1,4 @@
-"use client"
+'use client'
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { useUser } from '@auth0/nextjs-auth0/client'
@@ -9,9 +9,9 @@ const Results = () => {
   const [saveResults, setSaveResults] = useState(false)
 
   useEffect(() => {
-    axios.get('/service/get_results',  {headers: {'Content-Type': 'application/json'}})
+    axios.get('/service/get_results', { headers: { 'Content-Type': 'application/json' } })
       .then(response => {
-        setResults(response.data)
+        setResults([response.data])
       })
       .catch(error => {
         console.error('Error fetching results:', error)
@@ -66,7 +66,7 @@ const Results = () => {
               <h2 className="text-xl font-bold">{result.question}</h2>
               <p>Score: {result.score}</p>
               <p>Transcript: {result.transcript}</p>
-              <p>Filler Words: {result.filler_words.join(', ')}</p>
+              <p>Filler Words: {result.filler_words}</p>
               <p>Long Pauses: {result.long_pauses}</p>
             </div>
           ))}
