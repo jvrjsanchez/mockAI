@@ -5,6 +5,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv  # type: ignore
 from audio_analysis import analyze_audio
 from database import init_db, add_user, get_all_users, add_question, get_all_questions
+import sqlite3
 
 app = Flask(__name__)
 CORS(app)
@@ -120,6 +121,44 @@ def add_question_route():
 def get_questions_route():
     questions = get_all_questions()
     return jsonify(questions)
+
+@app.route('/service/save_results', methods=['POST'])
+def save_results():
+    data = request.get_json()
+    user = data.get('user')
+    results = data.get('results')
+
+    if not user or not results:
+        return jsonify({"error": "User and results are required"}), 400
+
+    # Save results in the database
+    try:
+        with sqlite3.connect('MockAI.db') as conn:
+            cursor = conn.cursor()
+            for result in results:
+                cursor.execute('''
+                    INSERT INTO results (user, question, score, transcript, filler_words, long_pauses)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (user, result['question'], result['score'], result['transcript'], ','.join(result['filler_words']), result['long_pauses']))
+            conn.commit()
+            return jsonify({"message": "Results saved successfully"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/service/get_results', methods=['GET'])
+def get_results():
+    results = request.get_json()
+    
+    try:
+        with sqlite3.connect('MockAI.db') as conn:
+            cursor = conn.cursor()
+            results = cursor.execute('''
+                SELECT * FROM results WHERE id = 1
+            ''').fetchone()
+            return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # Initialize the database when this script is executed directly
