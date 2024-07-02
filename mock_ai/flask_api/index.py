@@ -148,8 +148,17 @@ def save_results():
 
 @app.route('/service/get_results', methods=['GET'])
 def get_results():
-    results = get_results()
-    return jsonify(results)
+    results = request.get_json()
+    
+    try:
+        with sqlite3.connect('MockAI.db') as conn:
+            cursor = conn.cursor()
+            results = cursor.execute('''
+                SELECT * FROM results WHERE id = 1
+            ''').fetchone()
+            return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # Initialize the database when this script is executed directly

@@ -35,7 +35,7 @@ const Interview = () => {
           <h1 className='text-2xl font-bold'>Interview Meeting Room</h1>
           <div className='flex flex-row'>
             <Questions onSelectQuestion={setSelectedQuestion} />
-            <VoiceRecorder selectedQuestion={selectedQuestion} />
+            <VoiceRecorder selectedQuestion={selectedQuestion} user={user}/>
           </div>
           <button className='bg-primary-blue text-white mt-10 rounded-full'>
             <a href='/results'>View Results</a>
