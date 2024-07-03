@@ -12,22 +12,28 @@ const Header = () => {
         <Link href='/' className='flex justify-center items-center'>
           <Image src='/mockAILogo.jpeg' alt='mockAI' width={118} height={18} />
         </Link>
-        {isLoading ? (
+        {isLoading
+          ? (
           <div>Loading...</div>
-        ) : error ? (
+            )
+          : error
+            ? (
           <div>Error: {error.message} </div>
-        ) : user ? (
+              )
+            : user
+              ? (
           <div className='flex items-center'>
-            <span style={{margin: '10px'}} className='mr-4'>{user.name}</span>
+            <span style={{ margin: '10px' }} className='mr-4'>{user.name}</span>
             <a title='Log Out' href='/api/auth/logout' className='ml-4'>
               Log Out
             </a>
           </div>
-        ) : (
+                )
+              : (
           <a title='Sign In' href='/api/auth/login'>
             Sign In
           </a>
-        )}
+                )}
       </nav>
     </header>
   )
