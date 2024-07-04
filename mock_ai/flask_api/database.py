@@ -46,6 +46,7 @@ def init_db():
 
 
 def add_user(user):
+
     try:
         with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
@@ -90,6 +91,34 @@ def get_all_questions():
         questions = cursor.fetchall()
         logging.info("Retrieved all questions")
         return questions
+
+
+def get_user_by_email(email):
+    with sqlite3.connect('MockAI.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM users WHERE user = ?', (email,))
+        user = cursor.fetchone()
+        logging.info(f"Retrieved user: {user}")
+        return user[1]
+
+
+def save_transcript(user, results):
+
+    try:
+        transcript_result = results['results']['channels'][0]['alternatives'][0]['transcript']
+        with sqlite3.connect('MockAI.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO results (user, question, score, transcript, filler_words, long_pauses)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (user, "Why should I hire you?", 50, transcript_result, "uh", "0"))
+
+            conn.commit()
+            logging.info("Results saved successfully")
+            return True
+    except Exception as e:
+        logging.error(f"Error saving transcript: {e}")
+        return False
 
 
 # Initialize the database when this script is executed directly

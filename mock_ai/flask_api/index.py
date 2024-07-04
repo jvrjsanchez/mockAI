@@ -4,20 +4,32 @@ from deepgram import DeepgramClient, PrerecordedOptions, FileSource  # type: ign
 from flask_cors import CORS
 from dotenv import load_dotenv  # type: ignore
 from audio_analysis import analyze_audio
-from database import init_db, add_user, get_all_users, add_question, get_all_questions
+from database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript
 import sqlite3
+import google.generativeai as genai
 
 app = Flask(__name__)
 CORS(app)
 
 load_dotenv()
 
+# Gemini implementation psuedo code:
+# Determine the user we are analyzing.
+# Find the transcript for the user.
+# Is the transcript the one we want to analyze?
+# If not, find the correct transcript.
+# Make a call to the Gemini API with the transcript.
+# Return the results of the Gemini API call.
 
-# NOTE did you forget to add your API key to the .env file?
+
+# NOTE did you forget to add your API keys to the .env file?
 #      - path: mock_ai/api/.env
 API_KEY = os.getenv("DG_API_KEY")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-# TODO: create a function that saves the feedback to the sqlite database 'feedback' table.
+# Gemini configuration
+genai.configure(api_key=GOOGLE_API_KEY)
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 
 @app.route('/service', methods=['POST'])
@@ -30,6 +42,8 @@ def api():
 def upload_audio():
     if 'audio' not in request.files:
         return "No audio file provided", 400
+
+    user = request.form.get('user')
 
     audio_file = request.files['audio']
     audio_buffer = audio_file.read()
@@ -66,6 +80,11 @@ def upload_audio():
 
         # TODO: We also need to store some of the data.
 
+        # save the transcript to the feedback table and enter the users email.
+        user = get_user_by_email(user)
+        print(user)
+        save_transcript(user, response)
+
         return analyze_audio(response)
 
     except Exception as e:
@@ -80,18 +99,18 @@ def health():
 
 @app.route('/service/add_user', methods=['POST'])
 def add_email_route():
-    data = request.get_json()
-    email = data.get('email')
+    data = request.json
+    email = data['email']
 
     if not email:
         return jsonify({"error": "Email is required"}), 400
 
-    email_id = add_user(email)
+# if the user already exists in sqlite3, skip to the next step
+    user = add_user(email)
+    if user == "User already exists":
+        pass
 
-    if email_id == "Email already exists":
-        return jsonify({"error": "Email already exists"}), 400
-
-    return jsonify({"id": email_id, "email": email})
+    return jsonify({"message": "Request received"}), 200
 
 
 # TODO: Possibly protect this route. OR take it out of a route so it isn't accessible.
@@ -121,6 +140,7 @@ def add_question_route():
 def get_questions_route():
     questions = get_all_questions()
     return jsonify(questions)
+
 
 @app.route('/service/save_results', methods=['POST'])
 def save_results():
