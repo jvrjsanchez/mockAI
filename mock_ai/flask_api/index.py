@@ -6,8 +6,9 @@ from dotenv import load_dotenv  # type: ignore
 from audio_analysis import analyze_audio
 from database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript, get_last_transcript
 import sqlite3
+from genai_utils import prompt_with_audio_file
 import google.generativeai as genai
-import pathlib
+
 
 app = Flask(__name__)
 CORS(app)
@@ -19,6 +20,7 @@ load_dotenv()
 #      - path: mock_ai/api/.env
 API_KEY = os.getenv("DG_API_KEY")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+PROMPT_TO_AI = os.getenv("PROMPT_TO_AI")
 
 # Gemini configuration
 #  https://cloud.google.com/generative-ai/docs/gemini/quickstart
@@ -29,16 +31,6 @@ model = genai.GenerativeModel(
 
 audio_file_path = os.path.join(os.path.dirname(
     os.path.dirname(__file__)), 'audio.wav')
-
-
-def prompt_with_audio_file(prompt):
-    global audio_file_path
-
-    myfile = genai.upload_file(audio_file_path)
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    result = model.generate_content([myfile, prompt])
-
-    return result
 
 
 @app.route('/service', methods=['POST'])
@@ -209,10 +201,8 @@ def generate_ai_response():
 
         print("transcript from db: ", transcript)
 
-        prompt = f"You are an interview feedback analysis for a website called 'MockAI'. Job seekers submit their audio reponse to questions and your job is to help them improve, but remember, many job seekers have interview anxiety. The goal of this feedback is not to be too harsh, but give brief feedback where the job seeker can improve. Give a brief feedback on this audio response of an interviewee answering the question 'tell me about yourself?' count how many filler words they used. Give their longest pause in seconds. Give them a made up score out of 10. Return your response in a structured format that we can easily render in JSX using dangerouslySetInnerHTML. Thank them for their answer, and sign your name as 'MockAI'. DO NOT include any markdown in your response."
-
-        print(audio_file_path)
-        gemini_response = prompt_with_audio_file(prompt)
+        gemini_response = prompt_with_audio_file(
+            PROMPT_TO_AI, audio_file_path, genai)
 
         return jsonify({"response": gemini_response.text})
     except Exception as e:
@@ -220,10 +210,6 @@ def generate_ai_response():
         return jsonify({"error": str(e)}), 500
 
 
-    # With that user, get their last saved transcript.
-    # Use the Gemini API to generate a response.
-    # Return the response.
-# Initialize the database when this script is executed directly
 if __name__ == '__main__':
     init_db()
     app.run(port=3001, debug=True)
