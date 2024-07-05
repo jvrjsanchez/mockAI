@@ -4,22 +4,15 @@ from deepgram import DeepgramClient, PrerecordedOptions, FileSource  # type: ign
 from flask_cors import CORS
 from dotenv import load_dotenv  # type: ignore
 from audio_analysis import analyze_audio
-from database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript
+from database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript, get_last_transcript
 import sqlite3
 import google.generativeai as genai
+import pathlib
 
 app = Flask(__name__)
 CORS(app)
 
 load_dotenv()
-
-# Gemini implementation psuedo code:
-# Determine the user we are analyzing.
-# Find the transcript for the user.
-# Is the transcript the one we want to analyze?
-# If not, find the correct transcript.
-# Make a call to the Gemini API with the transcript.
-# Return the results of the Gemini API call.
 
 
 # NOTE did you forget to add your API keys to the .env file?
@@ -28,8 +21,24 @@ API_KEY = os.getenv("DG_API_KEY")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 # Gemini configuration
+#  https://cloud.google.com/generative-ai/docs/gemini/quickstart
 genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel(
+    'gemini-1.5-pro', generation_config={"response_mime_type": "application/json"})
+
+
+audio_file_path = os.path.join(os.path.dirname(
+    os.path.dirname(__file__)), 'audio.wav')
+
+
+def prompt_with_audio_file(prompt):
+    global audio_file_path
+
+    myfile = genai.upload_file(audio_file_path)
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    result = model.generate_content([myfile, prompt])
+
+    return result
 
 
 @app.route('/service', methods=['POST'])
@@ -49,14 +58,14 @@ def upload_audio():
     audio_buffer = audio_file.read()
 
     # save the audio file
-    with open('./audio.webm', 'wb') as f:
+    with open('./audio.wav', 'wb') as f:
         f.write(audio_buffer)
 
     try:
         # STEP 1 Create a Deepgram client using the API key
         deepgram = DeepgramClient(API_KEY)
 
-        with open('./audio.webm', "rb") as file:
+        with open('./audio.wav', "rb") as file:
             buffer_data = file.read()
 
         payload: FileSource = {
@@ -78,11 +87,9 @@ def upload_audio():
         response = deepgram.listen.prerecorded.v(
             "1").transcribe_file(payload, options)
 
-        # TODO: We also need to store some of the data.
-
         # save the transcript to the feedback table and enter the users email.
         user = get_user_by_email(user)
-        print(user)
+
         save_transcript(user, response)
 
         return analyze_audio(response)
@@ -99,6 +106,7 @@ def health():
 
 @app.route('/service/add_user', methods=['POST'])
 def add_email_route():
+
     data = request.json
     email = data['email']
 
@@ -107,6 +115,7 @@ def add_email_route():
 
 # if the user already exists in sqlite3, skip to the next step
     user = add_user(email)
+
     if user == "User already exists":
         pass
 
@@ -187,6 +196,33 @@ def get_results():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route('/service/generate_ai_response', methods=['POST', 'GET'])
+# Get the user from the request
+def generate_ai_response():
+
+    try:
+        data = request.get_json()
+        user = data.get('user')
+        print(user)
+        # Get the last transcript saved for the user
+        transcript = get_last_transcript(user)
+
+        print("transcript from db: ", transcript)
+
+        prompt = f"You are an interview feedback analysis for a website called 'MockAI'. Job seekers submit their audio reponse to questions and your job is to help them improve, but remember, many job seekers have interview anxiety. The goal of this feedback is not to be too harsh, but give brief feedback where the job seeker can improve. Give a brief feedback on this audio response of an interviewee answering the question 'tell me about yourself?' count how many filler words they used. Give their longest pause in seconds. Give them a made up score out of 10. Return your response in a structured format that we can easily render in JSX using dangerouslySetInnerHTML. Thank them for their answer, and sign your name as 'MockAI'. DO NOT include any markdown in your response."
+
+        print(audio_file_path)
+        gemini_response = prompt_with_audio_file(prompt)
+
+        return jsonify({"response": gemini_response.text})
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+    # With that user, get their last saved transcript.
+    # Use the Gemini API to generate a response.
+    # Return the response.
 # Initialize the database when this script is executed directly
 if __name__ == '__main__':
     init_db()

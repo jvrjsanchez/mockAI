@@ -6,6 +6,11 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Initialize or connect to the SQLite database
 
+default_question = "Tell me about a time you had to work with a difficult person. How did you handle the situation?"
+default_score = 100.0
+default_filler_words = ""
+default_long_pauses = ""
+
 
 def init_db():
     with sqlite3.connect('MockAI.db') as conn:
@@ -56,8 +61,12 @@ def add_user(user):
             logging.info(f"Added user: {user} with id: {user_id}")
             return user_id
     except sqlite3.IntegrityError as e:
-        logging.error(f"IntegrityError: {e}")
-        return "User already exists"
+        if "UNIQUE constraint failed" in str(e):
+            logging.error("User already in DB. Pass.")
+            return None
+        else:
+            logging.error(f"IntegrityError: {e}")
+            return "User already exists"
 
 
 def get_all_users():
@@ -111,7 +120,7 @@ def save_transcript(user, results):
             cursor.execute('''
                 INSERT INTO results (user, question, score, transcript, filler_words, long_pauses)
                 VALUES (?, ?, ?, ?, ?, ?)
-            ''', (user, "Why should I hire you?", 50, transcript_result, "uh", "0"))
+            ''', (user, default_question, default_score, transcript_result, default_filler_words, default_long_pauses))
 
             conn.commit()
             logging.info("Results saved successfully")
@@ -119,6 +128,21 @@ def save_transcript(user, results):
     except Exception as e:
         logging.error(f"Error saving transcript: {e}")
         return False
+
+
+def get_last_transcript(user):
+    try:
+        with sqlite3.connect('MockAI.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT transcript FROM results WHERE user = ? ORDER BY id DESC LIMIT 1
+            ''', (user,))
+            transcript = cursor.fetchone()
+            logging.info(f"Retrieved transcript: {transcript}")
+            return transcript[0]
+    except Exception as e:
+        logging.error(f"Error retrieving transcript: {e}")
+        return None
 
 
 # Initialize the database when this script is executed directly
