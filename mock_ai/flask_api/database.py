@@ -1,17 +1,15 @@
 import sqlite3
 import logging
+import random
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
+
+default_score = random.randint(60, 100)
+
+
 # Initialize or connect to the SQLite database
-
-default_question = "Tell me about a time you had to work with a difficult person. How did you handle the situation?"
-default_score = 100.0
-default_filler_words = ""
-default_long_pauses = ""
-
-
 def init_db():
     with sqlite3.connect('MockAI.db') as conn:
         cursor = conn.cursor()
@@ -118,16 +116,16 @@ def get_user_by_email(email):
         return None
 
 
-def save_transcript(user_id, transcript, question_id, filler_word_count, long_pauses):
+def save_transcript(user_id, transcript, question_id, question, filler_word_count, long_pauses, pause_durations):
 
     try:
 
         with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO results (user_id, question, question_id, score, transcript, filler_words, long_pauses)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (user_id, default_question, question_id, default_score, transcript, filler_word_count, long_pauses))
+                INSERT INTO results (user_id, question, question_id, score, transcript, filler_words, long_pauses, pause_durations)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (user_id, question, question_id, default_score, transcript, filler_word_count, long_pauses, pause_durations))
 
             conn.commit()
             logging.info("Results saved successfully")
