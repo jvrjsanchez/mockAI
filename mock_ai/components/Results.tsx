@@ -120,6 +120,7 @@ const Results = () => {
               <p>Transcript: {result.transcript}</p>
               <p>Filler Words: {result.filler_words}</p>
               <p>Long Pauses: {result.long_pauses}</p>
+              <p>Pause Durations: {result.pause_durations}</p>
             </div>
           ))}
           <div className="flex items-center mt-4">
