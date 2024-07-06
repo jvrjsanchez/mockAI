@@ -38,6 +38,7 @@ def init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
                 question_id INTEGER NOT NULL,
+                question TEXT NOT NULL,
                 score REAL NOT NULL,
                 transcript TEXT NOT NULL,
                 filler_words TEXT NOT NULL,
@@ -105,24 +106,28 @@ def get_all_questions():
 
 
 def get_user_by_email(email):
-    with sqlite3.connect('MockAI.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE user = ?', (email,))
-        user = cursor.fetchone()
-        logging.info(f"Retrieved user: {user}")
-        return user[1]
+    try:
+        with sqlite3.connect('MockAI.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM users WHERE user = ?', (email, ))
+            user = cursor.fetchone()
+            logging.info(f"Retrieved user: {user}")
+            return user[0]  # return primary key.
+    except Exception as e:
+        logging.error(f"Error retrieving user: {e}")
+        return None
 
 
-def save_transcript(user_id, results):
+def save_transcript(user_id, transcript, question_id, filler_word_count, long_pauses):
 
     try:
-        transcript_result = results['results']['channels'][0]['alternatives'][0]['transcript']
+
         with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO results (user_id, question, score, transcript, filler_words, long_pauses)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (user_id, default_question, default_score, transcript_result, default_filler_words, default_long_pauses))
+                INSERT INTO results (user_id, question, question_id, score, transcript, filler_words, long_pauses)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (user_id, default_question, question_id, default_score, transcript, filler_word_count, long_pauses))
 
             conn.commit()
             logging.info("Results saved successfully")
@@ -152,8 +157,15 @@ def update_feedback(user_id, feedback):
         with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                UPDATE results SET ai_feedback = ? WHERE user_id = ? ORDER BY id DESC LIMIT 1
-            ''', (feedback, user_id))
+                            UPDATE results
+                            SET ai_feedback = ?
+                            WHERE id = (
+                                SELECT id FROM results
+                                WHERE user_id = ?
+                                ORDER BY id DESC
+                                LIMIT 1
+                            )
+                        ''', (feedback, user_id))
             conn.commit()
             logging.info("Feedback updated successfully")
             return True
