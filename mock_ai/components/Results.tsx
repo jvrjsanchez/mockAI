@@ -1,59 +1,111 @@
-'use client'
-import React, { useEffect, useState } from 'react'
-import axios from 'axios'
-import { useUser } from '@auth0/nextjs-auth0/client'
+"use client";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useUser } from "@auth0/nextjs-auth0/client";
+import AnalysisCard from "./AnalysisCard";
 
 const Results = () => {
-  const { user } = useUser()
-  const [results, setResults] = useState<any[]>([])
-  const [saveResults, setSaveResults] = useState(false)
+  const { user } = useUser();
+  const [results, setResults] = useState<any[]>([]);
+  const [saveResults, setSaveResults] = useState(false);
+  const [analysis, setAnalysis] = useState<any>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [email, setEmail] = useState(user?.email);
 
   useEffect(() => {
-    axios.get('/service/get_results', { headers: { 'Content-Type': 'application/json' } })
-      .then(response => {
-        setResults([response.data])
-      })
-      .catch(error => {
-        console.error('Error fetching results:', error)
-      })
-  }, [])
+    setEmail(user?.email);
+  }, [user?.email]);
+
+  useEffect(() => {
+    if (email) {
+      axios
+        .get("/service/get_results", {
+          params: { user: user.email },
+          headers: { "Content-Type": "application/json" },
+        })
+        .then((response) => {
+          setResults([response.data]);
+        })
+        .catch((error) => {
+          console.error("Error fetching results:", error);
+        });
+    }
+  }, [email]);
+
+  /**
+   * Fetch analysis results from flask_api.
+   * body: { user: user.email }
+   *  explanation: The flask_api uses the recorded audio file that
+   *  was saved from the previous interview and generates an analysis.
+   *  The response is set in the analysis state.
+   */
+  useEffect(() => {
+    if (email) {
+      setAnalysisLoading(true);
+
+      axios
+        .post(
+          "/service/generate_ai_response",
+          { user: user.email },
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        )
+        .then((response) => {
+          setAnalysis([response.data.response]);
+        })
+        .catch((error) => {
+          console.error("Error fetching results:", error);
+        })
+        .finally(() => setAnalysisLoading(false));
+    }
+  }, [email]);
+
+  console.log("Analysis response:", analysis);
 
   const handleSaveToggle = () => {
-    setSaveResults(!saveResults)
-  }
+    setSaveResults(!saveResults);
+  };
 
   const handleSaveResults = () => {
     if (saveResults) {
-      axios.post('/service/save_results', { user: user.email, results })
-        .then(response => {
-          alert('Results saved successfully.')
+      axios
+        .post("/service/save_results", { user: user.email, results })
+        .then((response) => {
+          alert("Results saved successfully.");
         })
-        .catch(error => {
-          console.error('Error saving results:', error)
-        })
+        .catch((error) => {
+          console.error("Error saving results:", error);
+        });
     }
-  }
+  };
 
   const handleStartNewInterview = () => {
-    window.location.href = '/interview'
-  }
+    window.location.href = "/interview";
+  };
 
   const handleSignOut = () => {
-    window.location.href = '/api/auth/logout'
-  }
+    window.location.href = "/api/auth/logout";
+  };
 
   if (!user) {
     return (
-      <div className='hero'>
-        <div className='flex-1 pt-36 padding-x'>
-          <h1 className='text-2xl font-bold'>Your Interview Results Powered by mockAI</h1>
-          <p className='text-lg mt-4'>Sorry, but you must be signed in to review your results.</p>
-          <button className='bg-primary-blue text-white mt-10 rounded-full'>
-            <a href='/api/auth/login'>Sign In to Review Your Results</a>
+      <div className="hero">
+        <div className="flex-1 pt-36 padding-x">
+          <h1 className="text-2xl font-bold">
+            Your Interview Results Powered by mockAI
+          </h1>
+          <p className="text-lg mt-4">
+            Sorry, but you must be signed in to review your results.
+          </p>
+          <button className="bg-primary-blue text-white mt-10 rounded-full">
+            <a href="/api/auth/login">
+              Sign In to Review Your Results
+            </a>
           </button>
         </div>
       </div>
-    )
+    );
   } else {
     return (
       <div className="hero">
@@ -71,7 +123,9 @@ const Results = () => {
             </div>
           ))}
           <div className="flex items-center mt-4">
-            <label className="mr-2 text-lg font-medium">Save Results</label>
+            <label className="mr-2 text-lg font-medium">
+              Save Results
+            </label>
             <input
               type="checkbox"
               checked={saveResults}
@@ -85,6 +139,15 @@ const Results = () => {
           >
             Save Results
           </button>
+          {analysisLoading && (
+            <p className="animate-ping text-center">
+              Analyzing your answer...
+            </p>
+          )}
+          <AnalysisCard
+            title="Mock AI Analysis"
+            analysis={analysis}
+          />
           <div className="flex justify-between mt-6">
             <button
               onClick={handleStartNewInterview}
@@ -101,8 +164,8 @@ const Results = () => {
           </div>
         </div>
       </div>
-    )
+    );
   }
-}
+};
 
-export default Results
+export default Results;
