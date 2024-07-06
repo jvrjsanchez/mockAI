@@ -1,4 +1,3 @@
-from flask import jsonify
 
 
 def analyze_audio(response):
@@ -21,7 +20,8 @@ def analyze_audio(response):
     result = {
         'filler_word_count': filler_count,
         'long_pauses': len(pauses),
-        'pause_durations': pauses
+        'pause_durations': pauses,
+        'transcript': transcription,
     }
 
-    return jsonify(result)
+    return result
