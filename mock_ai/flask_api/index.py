@@ -1,10 +1,11 @@
 from flask import Flask, request, jsonify
 import os
+import json
 from deepgram import DeepgramClient, PrerecordedOptions, FileSource  # type: ignore
 from flask_cors import CORS
 from dotenv import load_dotenv  # type: ignore
 from audio_analysis import analyze_audio
-from database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript, get_last_transcript
+from database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript, get_last_transcript, update_feedback
 import sqlite3
 from genai_utils import prompt_with_audio_file
 import google.generativeai as genai
@@ -42,9 +43,17 @@ def api():
 @app.route('/service/upload_audio', methods=['POST'])
 def upload_audio():
     if 'audio' not in request.files:
-        return "No audio file provided", 400
+        return jsonify({"error": "No audio file provided"}), 400
+    elif 'user' not in request.form or 'question' not in request.form:
+        return jsonify({"error": "User and question are required"}), 400
 
     user = request.form.get('user')
+    # The question comes in as a string with the question id in the question. The id is actually the questions primary key, so we need to extract it.
+    questionId = request.form.get('question')
+    if questionId and questionId[:1].isdigit():
+        questionId = int(questionId[:1])
+    else:
+        return jsonify({"error": "Invalid question id"}), 400
 
     audio_file = request.files['audio']
     audio_buffer = audio_file.read()
@@ -80,11 +89,21 @@ def upload_audio():
             "1").transcribe_file(payload, options)
 
         # save the transcript to the feedback table and enter the users email.
-        user = get_user_by_email(user)
+        userId = get_user_by_email(user)
 
-        save_transcript(user, response)
+        analysis_results = analyze_audio(response)
 
-        return analyze_audio(response)
+       # Access the results from the dictionary
+        filler_word_count = analysis_results['filler_word_count']
+        long_pauses = analysis_results['long_pauses']
+        pause_durations = analysis_results['pause_durations']
+        transcript = analysis_results['transcript']
+        filler_word_count_json = json.dumps(filler_word_count)
+
+        save_transcript(userId, transcript, questionId,
+                        filler_word_count_json, long_pauses)
+
+        return jsonify(analyze_audio(response))
 
     except Exception as e:
         print(f"Exception: {e}")
@@ -158,9 +177,11 @@ def save_results():
             cursor = conn.cursor()
             for result in results:
                 cursor.execute('''
-                    INSERT INTO results (user, question, score, transcript, filler_words, long_pauses)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ''', (user, result['question'], result['score'], result['transcript'], ','.join(result['filler_words']), result['long_pauses']))
+                   UPDATE results
+                   SET question = ?, score = ?,  long_pauses = ?, 
+                   filler_words = ?
+                   where id = ?
+                ''', (result['question'], result['score'], result['long_pauses'], ','.join(result['filler_words']), result['id']))
             conn.commit()
             return jsonify({"message": "Results saved successfully"})
     except Exception as e:
@@ -170,39 +191,50 @@ def save_results():
 @app.route('/service/get_results', methods=['GET'])
 def get_results():
     try:
+        user = request.args.get('user').strip()
+        print("user from get_results:", user)
+        user = str(user)
+        userId = get_user_by_email(user)
+
         with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
             results = cursor.execute('''
-                SELECT * FROM results WHERE id = 1
-            ''').fetchone()
+                SELECT * FROM results WHERE user_id = ? ORDER BY id DESC LIMIT 1
+            ''', (userId,)).fetchone()
             return jsonify({
                 'id': results[0],
                 'user': results[1],
-                'question': results[2],
-                'score': results[3],
-                'transcript': results[4],
-                'filler_words': results[5],
-                'long_pauses': results[6]
+                'question': results[3],
+                'score': results[4],
+                'transcript': results[5],
+                'filler_words': results[6],
+                'long_pauses': results[7]
             })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
 @app.route('/service/generate_ai_response', methods=['POST', 'GET'])
-# Get the user from the request
+# If there is no
 def generate_ai_response():
 
     try:
         data = request.get_json()
         user = data.get('user')
         print(user)
+        userId = get_user_by_email(user)
         # Get the last transcript saved for the user
-        transcript = get_last_transcript(user)
+        transcript = get_last_transcript(userId)
 
         print("transcript from db: ", transcript)
 
         gemini_response = prompt_with_audio_file(
             PROMPT_TO_AI, audio_file_path, genai)
+
+        if gemini_response and gemini_response.text and user:
+            update_feedback(userId, gemini_response.text)
+        else:
+            print("No response from Gemini and user not provided.")
 
         return jsonify({"response": gemini_response.text})
     except Exception as e:
