@@ -1,12 +1,15 @@
 import sqlite3
 import logging
+import random
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
+
+default_score = random.randint(60, 100)
+
+
 # Initialize or connect to the SQLite database
-
-
 def init_db():
     with sqlite3.connect('MockAI.db') as conn:
         cursor = conn.cursor()
@@ -31,13 +34,16 @@ def init_db():
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS results (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user TEXT NOT NULL,
+                user_id INTEGER NOT NULL,
+                question_id INTEGER NOT NULL,
                 question TEXT NOT NULL,
                 score REAL NOT NULL,
                 transcript TEXT NOT NULL,
                 filler_words TEXT NOT NULL,
                 long_pauses TEXT NOT NULL,
-                FOREIGN KEY (user) REFERENCES users (user)
+                ai_feedback TEXT,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+                FOREIGN KEY (question_id) REFERENCES questions (id)
             )
         ''')
 
@@ -46,6 +52,7 @@ def init_db():
 
 
 def add_user(user):
+
     try:
         with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
@@ -55,8 +62,12 @@ def add_user(user):
             logging.info(f"Added user: {user} with id: {user_id}")
             return user_id
     except sqlite3.IntegrityError as e:
-        logging.error(f"IntegrityError: {e}")
-        return "User already exists"
+        if "UNIQUE constraint failed" in str(e):
+            logging.error("User already in DB. Pass.")
+            return None
+        else:
+            logging.error(f"IntegrityError: {e}")
+            return "User already exists"
 
 
 def get_all_users():
@@ -90,6 +101,75 @@ def get_all_questions():
         questions = cursor.fetchall()
         logging.info("Retrieved all questions")
         return questions
+
+
+def get_user_by_email(email):
+    try:
+        with sqlite3.connect('MockAI.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM users WHERE user = ?', (email, ))
+            user = cursor.fetchone()
+            logging.info(f"Retrieved user: {user}")
+            return user[0]  # return primary key.
+    except Exception as e:
+        logging.error(f"Error retrieving user: {e}")
+        return None
+
+
+def save_transcript(user_id, transcript, question_id, question, filler_word_count, long_pauses, pause_durations):
+
+    try:
+
+        with sqlite3.connect('MockAI.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO results (user_id, question, question_id, score, transcript, filler_words, long_pauses, pause_durations)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (user_id, question, question_id, default_score, transcript, filler_word_count, long_pauses, pause_durations))
+
+            conn.commit()
+            logging.info("Results saved successfully")
+            return True
+    except Exception as e:
+        logging.error(f"Error saving transcript: {e}")
+        return False
+
+
+def get_last_transcript(user_id):
+    try:
+        with sqlite3.connect('MockAI.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT transcript FROM results WHERE user_id = ? ORDER BY id DESC LIMIT 1
+            ''', (user_id,))
+            transcript = cursor.fetchone()
+            logging.info(f"Retrieved transcript: {transcript}")
+            return transcript[0]
+    except Exception as e:
+        logging.error(f"Error retrieving transcript: {e}")
+        return None
+
+
+def update_feedback(user_id, feedback):
+    try:
+        with sqlite3.connect('MockAI.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                            UPDATE results
+                            SET ai_feedback = ?
+                            WHERE id = (
+                                SELECT id FROM results
+                                WHERE user_id = ?
+                                ORDER BY id DESC
+                                LIMIT 1
+                            )
+                        ''', (feedback, user_id))
+            conn.commit()
+            logging.info("Feedback updated successfully")
+            return True
+    except Exception as e:
+        logging.error(f"Error updating feedback: {e}")
+        return False
 
 
 # Initialize the database when this script is executed directly
