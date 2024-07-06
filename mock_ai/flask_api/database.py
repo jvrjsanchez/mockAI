@@ -36,13 +36,15 @@ def init_db():
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS results (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user TEXT NOT NULL,
-                question TEXT NOT NULL,
+                user_id INTEGER NOT NULL,
+                question_id INTEGER NOT NULL,
                 score REAL NOT NULL,
                 transcript TEXT NOT NULL,
                 filler_words TEXT NOT NULL,
                 long_pauses TEXT NOT NULL,
-                FOREIGN KEY (user) REFERENCES users (user)
+                ai_feedback TEXT,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+                FOREIGN KEY (question_id) REFERENCES questions (id)
             )
         ''')
 
@@ -111,16 +113,16 @@ def get_user_by_email(email):
         return user[1]
 
 
-def save_transcript(user, results):
+def save_transcript(user_id, results):
 
     try:
         transcript_result = results['results']['channels'][0]['alternatives'][0]['transcript']
         with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO results (user, question, score, transcript, filler_words, long_pauses)
+                INSERT INTO results (user_id, question, score, transcript, filler_words, long_pauses)
                 VALUES (?, ?, ?, ?, ?, ?)
-            ''', (user, default_question, default_score, transcript_result, default_filler_words, default_long_pauses))
+            ''', (user_id, default_question, default_score, transcript_result, default_filler_words, default_long_pauses))
 
             conn.commit()
             logging.info("Results saved successfully")
@@ -130,19 +132,34 @@ def save_transcript(user, results):
         return False
 
 
-def get_last_transcript(user):
+def get_last_transcript(user_id):
     try:
         with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT transcript FROM results WHERE user = ? ORDER BY id DESC LIMIT 1
-            ''', (user,))
+                SELECT transcript FROM results WHERE user_id = ? ORDER BY id DESC LIMIT 1
+            ''', (user_id,))
             transcript = cursor.fetchone()
             logging.info(f"Retrieved transcript: {transcript}")
             return transcript[0]
     except Exception as e:
         logging.error(f"Error retrieving transcript: {e}")
         return None
+
+
+def update_feedback(user_id, feedback):
+    try:
+        with sqlite3.connect('MockAI.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                UPDATE results SET ai_feedback = ? WHERE user_id = ? ORDER BY id DESC LIMIT 1
+            ''', (feedback, user_id))
+            conn.commit()
+            logging.info("Feedback updated successfully")
+            return True
+    except Exception as e:
+        logging.error(f"Error updating feedback: {e}")
+        return False
 
 
 # Initialize the database when this script is executed directly
