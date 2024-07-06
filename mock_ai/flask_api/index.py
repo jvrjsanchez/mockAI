@@ -7,7 +7,7 @@ from dotenv import load_dotenv  # type: ignore
 from audio_analysis import analyze_audio
 from database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript, get_last_transcript, update_feedback
 import sqlite3
-from genai_utils import prompt_with_audio_file
+from genai_utils import prompt_with_audio_file, extract_analysis_results
 import google.generativeai as genai
 
 
@@ -34,12 +34,6 @@ audio_file_path = os.path.join(os.path.dirname(
     os.path.dirname(__file__)), 'audio.wav')
 
 
-@app.route('/service', methods=['POST'])
-def api():
-    data = request.get_json()
-    return jsonify(data)
-
-
 @app.route('/service/upload_audio', methods=['POST'])
 def upload_audio():
     if 'audio' not in request.files:
@@ -48,10 +42,13 @@ def upload_audio():
         return jsonify({"error": "User and question are required"}), 400
 
     user = request.form.get('user')
+
+    question = request.form.get('question')
+    questionId = None
+
     # The question comes in as a string with the question id in the question. The id is actually the questions primary key, so we need to extract it.
-    questionId = request.form.get('question')
-    if questionId and questionId[:1].isdigit():
-        questionId = int(questionId[:1])
+    if question and question[:1].isdigit():
+        questionId = int(question[:1])
     else:
         return jsonify({"error": "Invalid question id"}), 400
 
@@ -93,15 +90,12 @@ def upload_audio():
 
         analysis_results = analyze_audio(response)
 
-       # Access the results from the dictionary
-        filler_word_count = analysis_results['filler_word_count']
-        long_pauses = analysis_results['long_pauses']
-        pause_durations = analysis_results['pause_durations']
-        transcript = analysis_results['transcript']
-        filler_word_count_json = json.dumps(filler_word_count)
+       # Access the results from the dictionary from analyze_audio using helper.
+        long_pauses, pause_durations, transcript, filler_word_count_json = extract_analysis_results(
+            analysis_results)
 
-        save_transcript(userId, transcript, questionId,
-                        filler_word_count_json, long_pauses)
+        save_transcript(userId, transcript, questionId, question[2:],
+                        filler_word_count_json, long_pauses, 0 if len(pause_durations) == 0 else json.dumps(pause_durations))
 
         return jsonify(analyze_audio(response))
 
@@ -181,7 +175,7 @@ def save_results():
                    SET question = ?, score = ?,  long_pauses = ?, 
                    filler_words = ?
                    where id = ?
-                ''', (result['question'], result['score'], result['long_pauses'], ','.join(result['filler_words']), result['id']))
+                ''', (result['question'], result['score'], result['long_pauses'], result['filler_words'], result['id']))
             conn.commit()
             return jsonify({"message": "Results saved successfully"})
     except Exception as e:
@@ -192,7 +186,6 @@ def save_results():
 def get_results():
     try:
         user = request.args.get('user').strip()
-        print("user from get_results:", user)
         user = str(user)
         userId = get_user_by_email(user)
 
@@ -208,25 +201,27 @@ def get_results():
                 'score': results[4],
                 'transcript': results[5],
                 'filler_words': results[6],
-                'long_pauses': results[7]
+                'long_pauses': results[7],
+                'ai_feedback': '' if not results[8]
+                else results[8],
+                'pause_durations': results[9]
             })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
 @app.route('/service/generate_ai_response', methods=['POST', 'GET'])
-# If there is no
 def generate_ai_response():
 
     try:
         data = request.get_json()
         user = data.get('user')
-        print(user)
         userId = get_user_by_email(user)
-        # Get the last transcript saved for the user
-        transcript = get_last_transcript(userId)
 
-        print("transcript from db: ", transcript)
+        # Get the last transcript saved for the user
+        # NOTE Not used as we pass the audio to the AI model. We can use this if we have problems saving audio in deployment.
+        transcript = get_last_transcript(userId)
+        print("transcript from db [not in use]: ", transcript)
 
         gemini_response = prompt_with_audio_file(
             PROMPT_TO_AI, audio_file_path, genai)
