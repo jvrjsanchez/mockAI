@@ -220,8 +220,8 @@ def generate_ai_response():
 
         # Get the last transcript saved for the user
         # NOTE Not used as we pass the audio to the AI model. We can use this if we have problems saving audio in deployment.
-        transcript = get_last_transcript(userId)
-        print("transcript from db [not in use]: ", transcript)
+        #transcript = get_last_transcript(userId)
+        #print("transcript from db [not in use]: ", transcript)
 
         gemini_response = prompt_with_audio_file(
             PROMPT_TO_AI, audio_file_path, genai)

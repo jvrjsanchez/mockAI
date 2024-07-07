@@ -41,6 +41,7 @@ def init_db():
                 transcript TEXT NOT NULL,
                 filler_words TEXT NOT NULL,
                 long_pauses TEXT NOT NULL,
+                pause_durations TEXT,
                 ai_feedback TEXT,
                 FOREIGN KEY (user_id) REFERENCES users (id)
                 FOREIGN KEY (question_id) REFERENCES questions (id)

@@ -23,7 +23,7 @@ const Header = () => {
             : user
               ? (
           <div className='flex items-center'>
-            <span style={{ margin: '10px' }} className='mr-4'>{user.name}</span>
+            <Link href='/user_account' title='User Account' style={{ margin: '10px' }} className='mr-4'>{user.name}</Link>
             <a title='Log Out' href='/api/auth/logout' className='ml-4'>
               Log Out
             </a>

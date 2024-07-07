@@ -123,6 +123,15 @@ const Results = () => {
               <p>Pause Durations: {result.pause_durations}</p>
             </div>
           ))}
+          {analysisLoading && (
+            <p className="animate-ping text-center">
+              Analyzing your answer...
+            </p>
+          )}
+          <AnalysisCard
+            title="Mock AI Analysis"
+            analysis={analysis}
+          />
           <div className="flex items-center mt-4">
             <label className="mr-2 text-lg font-medium">
               Save Results
@@ -139,16 +148,7 @@ const Results = () => {
             className="bg-primary-blue text-white mt-4 rounded-full p-2"
           >
             Save Results
-          </button>
-          {analysisLoading && (
-            <p className="animate-ping text-center">
-              Analyzing your answer...
-            </p>
-          )}
-          <AnalysisCard
-            title="Mock AI Analysis"
-            analysis={analysis}
-          />
+          </button> 
           <div className="flex justify-between mt-6">
             <button
               onClick={handleStartNewInterview}

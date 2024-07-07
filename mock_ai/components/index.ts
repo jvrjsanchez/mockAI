@@ -7,6 +7,7 @@ import VoiceRecorder from "./VoiceRecorder";
 import FillerCount from "./FillerCount";
 import Questions from "./Questions";
 import AnalysisCard from "./AnalysisCard";
+import UserAccount from "./UserAccount";
 
 export {
   Header,
@@ -16,6 +17,6 @@ export {
   Questions,
   VoiceRecorder,
   Footer,
-  FillerCount,
-  AnalysisCard,
-};
+  UserAccount,
+  AnalysisCard
+}
