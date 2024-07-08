@@ -12,6 +12,7 @@ const Header = () => {
         <Link href='/' className='flex justify-center items-center'>
           <Image src='/mockAILogo.jpeg' alt='mockAI' width={118} height={18} />
         </Link>
+        <Link href='/tips' title='Tips' className='mr-4'>Tips</Link>
         {isLoading
           ? (
           <div>Loading...</div>
