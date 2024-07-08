@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import useUploadAudio from "@/hooks/useUpload";
-import FillerCount from "./FillerCount";
 import { Feedback } from "@/types";
 
 interface VoiceRecorderProps {
@@ -166,11 +165,8 @@ export default function VoiceRecorder({
               <span className="text-gray-600">Uploading...</span>
             </div>
           )}
-          {feedback && showFeedback && (
-            <FillerCount feedback={feedback} />
-          )}
         </div>
       </div>
     </div>
-  );
+  )
 }

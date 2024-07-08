@@ -153,7 +153,7 @@ def add_question_route():
 @app.route('/service/get_questions', methods=['GET'])
 def get_questions_route():
     questions = get_all_questions()
-    return jsonify(questions)
+    return jsonify([{"id": q[0], "question": q[1]} for q in questions])
 
 
 @app.route('/service/save_results', methods=['POST'])

@@ -10,7 +10,7 @@ const Questions = ({ onSelectQuestion }: { onSelectQuestion: (question: string) 
     const fetchQuestions = async () => {
       try {
         const response = await axios.get('/service/get_questions')
-        setQuestions(response.data)
+        setQuestions(response.data.map((q: { id: number; question: string }) => q.question))
       } catch (error) {
         console.error('Error fetching questions:', error)
       }
