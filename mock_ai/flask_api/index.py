@@ -209,8 +209,8 @@ def get_results():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@app.route('/service/get_all_feedback', methods=['GET'])
-def get_all_feedback():
+@app.route('/service/get_all_results', methods=['GET'])
+def get_all_results():
     try:
         user = request.args.get('user').strip()
         user = str(user)
@@ -221,22 +221,22 @@ def get_all_feedback():
             results = cursor.execute('''
                 SELECT * FROM results WHERE user_id = ? ORDER BY id DESC
             ''', (userId,)).fetchall()
-            feedback_list = [{
-                'id': result[0],
-                'user': result[1],
-                'question': result[3],
-                'score': result[4],
-                'transcript': result[5],
-                'filler_words': result[6],
-                'long_pauses': result[7],
-                'ai_feedback': '' if not result[8] else result[8],
-                'pause_durations': result[9]
-            } for result in results]
-            return jsonify(feedback_list)
+            return jsonify([
+                {
+                    'id': result[0],
+                    'user': result[1],
+                    'question': result[3],
+                    'score': result[4],
+                    'transcript': result[5],
+                    'filler_words': result[6],
+                    'long_pauses': result[7],
+                    'ai_feedback': '' if not result[8] else result[8],
+                    'pause_durations': result[9]
+                }
+                for result in results
+            ])
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
 
 @app.route('/service/generate_ai_response', methods=['POST', 'GET'])
 def generate_ai_response():
