@@ -32,13 +32,6 @@ const Results = () => {
     }
   }, [email]);
 
-  /**
-   * Fetch analysis results from flask_api.
-   * body: { user: user.email }
-   *  explanation: The flask_api uses the recorded audio file that
-   *  was saved from the previous interview and generates an analysis.
-   *  The response is set in the analysis state.
-   */
   useEffect(() => {
     if (email) {
       setAnalysisLoading(true);
@@ -61,8 +54,6 @@ const Results = () => {
     }
   }, [email]);
 
-  console.log("Analysis response:", analysis);
-
   const handleSaveToggle = () => {
     setSaveResults(!saveResults);
   };
@@ -71,7 +62,7 @@ const Results = () => {
     if (saveResults) {
       axios
         .post("/service/save_results", { user: user.email, results })
-        .then((response) => {
+        .then(() => {
           alert("Results saved successfully.");
         })
         .catch((error) => {
@@ -148,7 +139,7 @@ const Results = () => {
             className="bg-primary-blue text-white mt-4 rounded-full p-2"
           >
             Save Results
-          </button> 
+          </button>
           <div className="flex justify-between mt-6">
             <button
               onClick={handleStartNewInterview}
