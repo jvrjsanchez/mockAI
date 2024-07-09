@@ -32,13 +32,6 @@ const Results = () => {
     }
   }, [email]);
 
-  /**
-   * Fetch analysis results from flask_api.
-   * body: { user: user.email }
-   *  explanation: The flask_api uses the recorded audio file that
-   *  was saved from the previous interview and generates an analysis.
-   *  The response is set in the analysis state.
-   */
   useEffect(() => {
     if (email) {
       setAnalysisLoading(true);
@@ -61,8 +54,6 @@ const Results = () => {
     }
   }, [email]);
 
-  console.log("Analysis response:", analysis);
-
   const handleSaveToggle = () => {
     setSaveResults(!saveResults);
   };
@@ -71,7 +62,7 @@ const Results = () => {
     if (saveResults) {
       axios
         .post("/service/save_results", { user: user.email, results })
-        .then((response) => {
+        .then(() => {
           alert("Results saved successfully.");
         })
         .catch((error) => {
@@ -111,16 +102,16 @@ const Results = () => {
       <div className="hero">
         <div className="flex-1 pt-36 padding-x">
           <h1 className="text-2xl font-bold">
-            Your Interview Results Powered by mockAI
+            Your Interview Feedback Powered by mockAI
           </h1>
           {results.map((result, index) => (
             <div key={index} className="result-card">
               <h2 className="text-xl font-bold">{result.question}</h2>
-              <p>Score: {result.score}</p>
-              <p>Transcript: {result.transcript}</p>
-              <p>Filler Words: {result.filler_words}</p>
-              <p>Long Pauses: {result.long_pauses}</p>
-              <p>Pause Durations: {result.pause_durations}</p>
+              <p><strong>Score:</strong> {result.score}</p>
+              <p><strong>Transcript:</strong> {result.transcript}</p>
+              <p><strong>Filler Words:</strong> {result.filler_words}</p>
+              <p><strong>Long Pauses:</strong> {result.long_pauses}</p>
+              <p><strong>Pause Durations:</strong> {result.pause_durations}</p>
             </div>
           ))}
           {analysisLoading && (
@@ -148,7 +139,7 @@ const Results = () => {
             className="bg-primary-blue text-white mt-4 rounded-full p-2"
           >
             Save Results
-          </button> 
+          </button>
           <div className="flex justify-between mt-6">
             <button
               onClick={handleStartNewInterview}
