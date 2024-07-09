@@ -10,7 +10,7 @@ const Questions = ({ onSelectQuestion }: { onSelectQuestion: (question: string) 
     const fetchQuestions = async () => {
       try {
         const response = await axios.get('/service/get_questions')
-        setQuestions(response.data.map((q: { id: number; question: string }) => q.question))
+        setQuestions(response.data)
       } catch (error) {
         console.error('Error fetching questions:', error)
       }
@@ -34,7 +34,7 @@ const Questions = ({ onSelectQuestion }: { onSelectQuestion: (question: string) 
             className={`cursor-pointer p-2 ${selectedQuestion === question ? 'bg-gray-200' : ''}`}
             onClick={() => handleQuestionClick(question)}
           >
-            {question}
+            {question.slice(1)} {/* Remove leading number from question that user sees */}
           </li>
         ))}
       </ul>
