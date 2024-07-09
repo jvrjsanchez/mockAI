@@ -102,16 +102,16 @@ const Results = () => {
       <div className="hero">
         <div className="flex-1 pt-36 padding-x">
           <h1 className="text-2xl font-bold">
-            Your Interview Results Powered by mockAI
+            Your Interview Feedback Powered by mockAI
           </h1>
           {results.map((result, index) => (
             <div key={index} className="result-card">
               <h2 className="text-xl font-bold">{result.question}</h2>
-              <p>Score: {result.score}</p>
-              <p>Transcript: {result.transcript}</p>
-              <p>Filler Words: {result.filler_words}</p>
-              <p>Long Pauses: {result.long_pauses}</p>
-              <p>Pause Durations: {result.pause_durations}</p>
+              <p><strong>Score:</strong> {result.score}</p>
+              <p><strong>Transcript:</strong> {result.transcript}</p>
+              <p><strong>Filler Words:</strong> {result.filler_words}</p>
+              <p><strong>Long Pauses:</strong> {result.long_pauses}</p>
+              <p><strong>Pause Durations:</strong> {result.pause_durations}</p>
             </div>
           ))}
           {analysisLoading && (
