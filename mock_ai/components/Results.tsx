@@ -104,6 +104,7 @@ const Results = () => {
           <h1 className="text-2xl font-bold">
             Your Interview Feedback Powered by mockAI
           </h1>
+          <h2></h2>
           {results.map((result, index) => (
             <div key={index} className="result-card">
               <h2 className="text-xl font-bold">{result.question}</h2>
