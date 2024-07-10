@@ -42,5 +42,3 @@ flask_api/*.pyc
 myenv/
 venv/
 flask_api/.env
-
-
