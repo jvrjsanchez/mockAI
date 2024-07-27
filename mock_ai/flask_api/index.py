@@ -5,7 +5,7 @@ from deepgram import DeepgramClient, PrerecordedOptions, FileSource  # type: ign
 from flask_cors import CORS
 from dotenv import load_dotenv  # type: ignore
 from audio_analysis import analyze_audio
-from database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript, get_last_transcript, update_feedback
+from database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript, update_feedback
 import sqlite3
 from genai_utils import prompt_with_audio_file, extract_analysis_results
 import google.generativeai as genai
@@ -173,9 +173,9 @@ def save_results():
                 cursor.execute('''
                    UPDATE results
                    SET question = ?, score = ?,  long_pauses = ?, 
-                   filler_words = ?
+                   filler_words = ?, pause_durations = ?
                    where id = ?
-                ''', (result['question'], result['score'], result['long_pauses'], result['filler_words'], result['id']))
+                ''', (result['question'], result['score'], result['long_pauses'], result['filler_words'], result['pause_durations'], result['id']))
             conn.commit()
             return jsonify({"message": "Results saved successfully"})
     except Exception as e:
@@ -202,9 +202,9 @@ def get_results():
                 'transcript': results[5],
                 'filler_words': results[6],
                 'long_pauses': results[7],
-                'ai_feedback': '' if not results[8]
-                else results[8],
-                'pause_durations': results[9]
+                'pause_durations': results[8],
+                'ai_feedback': '' if not results[9]
+                else results[9],
             })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -230,8 +230,8 @@ def get_all_results():
                     'transcript': result[5],
                     'filler_words': result[6],
                     'long_pauses': result[7],
-                    'ai_feedback': '' if not result[8] else result[8],
-                    'pause_durations': result[9]
+                    'pause_durations': result[8],
+                    'ai_feedback': '' if not result[9] else result[9]
                 }
                 for result in results
             ])
