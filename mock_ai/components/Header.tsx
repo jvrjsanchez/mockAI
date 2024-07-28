@@ -23,7 +23,7 @@ const Header = () => {
           <Image src='/mockAILogo.jpeg' alt='mockAI' width={118} height={18} />
         </Link>
         <div className='relative'>
-          <button 
+          <button
             onClick={handleAccordionClick}
             className='flex items-center justify-center'
           >
@@ -37,11 +37,16 @@ const Header = () => {
                     Tips
                   </Link>
                 </li>
-                {isLoading ? (
+                {isLoading
+                  ? (
                   <li className='block px-4 py-2'>Loading...</li>
-                ) : error ? (
+                    )
+                  : error
+                    ? (
                   <li className='block px-4 py-2'>Error: {error.message}</li>
-                ) : user ? (
+                      )
+                    : user
+                      ? (
                   <>
                     <li onClick={closeAccordion}>
                       <Link href='/user_account' title='User Account' className='block px-4 py-2'>
@@ -54,13 +59,14 @@ const Header = () => {
                       </a>
                     </li>
                   </>
-                ) : (
+                        )
+                      : (
                   <li onClick={closeAccordion}>
                     <a title='Sign In' href='/api/auth/login' className='block px-4 py-2'>
                       Sign In
                     </a>
                   </li>
-                )}
+                        )}
               </ul>
             </div>
           )}

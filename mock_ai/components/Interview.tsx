@@ -1,21 +1,21 @@
-"use client";
-import { useUser } from "@auth0/nextjs-auth0/client";
-import Questions from "./Questions";
-import VoiceRecorder from "./VoiceRecorder";
-import { useState } from "react";
+'use client'
+import { useUser } from '@auth0/nextjs-auth0/client'
+import Questions from './Questions'
+import VoiceRecorder from './VoiceRecorder'
+import { useState } from 'react'
 
 const Interview = () => {
-  const { user, error, isLoading } = useUser();
+  const { user, error, isLoading } = useUser()
   const [selectedQuestion, setSelectedQuestion] = useState<
     string | null
-  >(null);
+  >(null)
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>Loading...</div>
   }
 
   if (error) {
-    return <div>Error: {error.message}</div>;
+    return <div>Error: {error.message}</div>
   }
 
   if (!user) {
@@ -35,7 +35,7 @@ const Interview = () => {
           </button>
         </div>
       </div>
-    );
+    )
   } else {
     return (
       <div className="hero flex flex-col sm:flex-row">
@@ -55,8 +55,8 @@ const Interview = () => {
           </button>
         </div>
       </div>
-    );
+    )
   }
-};
+}
 
-export default Interview;
+export default Interview
