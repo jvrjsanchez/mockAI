@@ -77,19 +77,20 @@ const UserAccount = () => {
                     >
                       {feedbacks.map(feedback => (
                         <option key={feedback.id} value={feedback.id}>
-                          {feedback.question} - Score: {feedback.score}
+                          {feedback.question} - Score: {feedback.score} - Date: {feedback.interview_date}
                         </option>
                       ))}
                     </select>
                     {selectedFeedback && (
                       <div className="mt-4">
-                        <h2 className="text-xl font-bold">{selectedFeedback.question}</h2>
+                        <h2 className="text-xl font-bold">{selectedFeedback.interview_date}</h2>
                         <p><strong>Score:</strong> {selectedFeedback.score}</p>
                         <p><strong>Transcript:</strong> {selectedFeedback.transcript}</p>
                         <p><strong>Filler Words:</strong> {selectedFeedback.filler_words}</p>
                         <p><strong>Long Pauses:</strong> {selectedFeedback.long_pauses}</p>
                         <p><strong>Pause Durations:</strong> {selectedFeedback.pause_durations}</p>
                         <p><strong>AI Feedback:</strong> {selectedFeedback.ai_feedback}</p>
+                        <p><strong>Interview Date:</strong> {selectedFeedback.interview_date}</p>
                       </div>
                     )}
                   </div>

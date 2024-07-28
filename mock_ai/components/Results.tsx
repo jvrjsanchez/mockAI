@@ -113,6 +113,7 @@ const Results = () => {
               <p><strong>Filler Words:</strong> {result.filler_words}</p>
               <p><strong>Long Pauses:</strong> {result.long_pauses}</p>
               <p><strong>Pause Durations:</strong> {result.pause_durations}</p>
+              <p><strong>Interview Date:</strong> {result.interview_date}</p>
             </div>
           ))}
           {analysisLoading && (

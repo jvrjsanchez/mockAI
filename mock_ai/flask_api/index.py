@@ -1,6 +1,9 @@
+# index.py
+
 from flask import Flask, request, jsonify
 import os
 import json
+import logging
 from deepgram import DeepgramClient, PrerecordedOptions, FileSource  # type: ignore
 from flask_cors import CORS
 from dotenv import load_dotenv  # type: ignore
@@ -9,18 +12,18 @@ from database import init_db, add_user, get_all_users, add_question, get_all_que
 import sqlite3
 from genai_utils import prompt_with_audio_file, extract_analysis_results
 import google.generativeai as genai
-
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
 
 load_dotenv()
 
-
 # NOTE did you forget to add your API keys to the .env file?
 #      - path: mock_ai/api/.env
 API_KEY = os.getenv("DG_API_KEY")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+PROMPT_TO_AI_INTERVIEWER = os.getenv("PROMPT_TO_AI_INTERVIEWER")
 PROMPT_TO_AI = os.getenv("PROMPT_TO_AI")
 
 # Gemini configuration
@@ -29,10 +32,11 @@ genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel(
     'gemini-1.5-pro', generation_config={"response_mime_type": "application/json"})
 
-
 audio_file_path = os.path.join(os.path.dirname(
     os.path.dirname(__file__)), 'audio.wav')
 
+# Initialize the database
+init_db()
 
 @app.route('/service/upload_audio', methods=['POST'])
 def upload_audio():
@@ -42,7 +46,6 @@ def upload_audio():
         return jsonify({"error": "User and question are required"}), 400
 
     user = request.form.get('user')
-
     question = request.form.get('question')
     questionId = None
 
@@ -90,14 +93,30 @@ def upload_audio():
 
         analysis_results = analyze_audio(response)
 
-       # Access the results from the dictionary from analyze_audio using helper.
+        # Access the results from the dictionary from analyze_audio using helper.
         long_pauses, pause_durations, transcript, filler_word_count_json = extract_analysis_results(
             analysis_results)
 
-        save_transcript(userId, transcript, questionId, question[2:],
-                        filler_word_count_json, long_pauses, 0 if len(pause_durations) == 0 else json.dumps(pause_durations))
+        # Generate score and feedback using Google Gemini
+        gemini_response = prompt_with_audio_file(
+            PROMPT_TO_AI, audio_file_path, genai)
+        feedback = gemini_response.text
+        score = gemini_response.metadata.get('score', 0)  # Assuming score is part of the response metadata
 
-        return jsonify(analyze_audio(response))
+        interview_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        save_transcript(userId, transcript, questionId, question[2:],
+                        filler_word_count_json, long_pauses, 0 if len(pause_durations) == 0 else json.dumps(pause_durations), score, feedback, interview_date)
+
+        return jsonify({
+            "transcript": transcript,
+            "score": score,
+            "feedback": feedback,
+            "long_pauses": long_pauses,
+            "pause_durations": pause_durations,
+            "filler_words": filler_word_count_json,
+            "interview_date": interview_date
+        })
 
     except Exception as e:
         print(f"Exception: {e}")
@@ -111,23 +130,21 @@ def health():
 
 @app.route('/service/add_user', methods=['POST'])
 def add_email_route():
-
     data = request.json
     email = data['email']
 
     if not email:
         return jsonify({"error": "Email is required"}), 400
 
-# if the user already exists in sqlite3, skip to the next step
-    user = add_user(email)
+    # if the user already exists in sqlite3, skip to the next step
+    user_id = add_user(email, email)
 
-    if user == "User already exists":
-        pass
+    if user_id is None:
+        return jsonify({"error": "User already exists"}), 400
 
-    return jsonify({"message": "Request received"}), 200
+    return jsonify({"message": "Request received", "user_id": user_id}), 200
 
 
-# TODO: Possibly protect this route. OR take it out of a route so it isn't accessible.
 @app.route('/service/get_users', methods=['GET'])
 def get_emails_route():
     emails = get_all_users()
@@ -150,7 +167,7 @@ def add_question_route():
     return jsonify({"id": question_id, "question": question})
 
 
-@app.route('/service/get_questions', methods=['GET'])
+@app.route('/service/get_question', methods=['GET'])
 def get_questions_route():
     questions = get_all_questions()
     return jsonify(questions)
@@ -203,12 +220,13 @@ def get_results():
                 'filler_words': results[6],
                 'long_pauses': results[7],
                 'pause_durations': results[8],
-                'ai_feedback': '' if not results[9]
-                else results[9],
+                'ai_feedback': '' if not results[9] else results[9],
+                'interview_date': results[10],
             })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+
 @app.route('/service/get_all_results', methods=['GET'])
 def get_all_results():
     try:
@@ -231,16 +249,17 @@ def get_all_results():
                     'filler_words': result[6],
                     'long_pauses': result[7],
                     'pause_durations': result[8],
-                    'ai_feedback': '' if not result[9] else result[9]
+                    'ai_feedback': '' if not result[9] else result[9],
+                    'interview_date': result[10],
                 }
                 for result in results
             ])
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/service/generate_ai_response', methods=['POST', 'GET'])
 def generate_ai_response():
-
     try:
         data = request.get_json()
         user = data.get('user')
@@ -262,6 +281,27 @@ def generate_ai_response():
         return jsonify({"response": gemini_response.text})
     except Exception as e:
         print(f"An error occurred: {e}")
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/service/generate_interview_question', methods=['GET'])
+def generate_interview_question():
+    try:
+        prompt = "You are an interviewer for a website called 'mockAI'. Ask a behavioral question to the interviewee. The goal of this question is to understand how the interviewee handles a situation. Ask the interviewee to answer the question within 3 minutes. Address them by their name if you understood it. "
+        if not prompt:
+            raise ValueError("Prompt not provided")
+        
+        logging.debug(f"Prompt: {prompt}")
+        gemini_response = model.generate_content(prompt)
+        
+        if gemini_response and gemini_response.text:
+            question = gemini_response.text
+            add_question(question)
+            return question
+        else:
+            print("No response from Gemini and user not provided.")
+            return jsonify({"error": "No response from Gemini"}), 500
+    except Exception as e:
+        logging.error(f"Exception: {e}")
         return jsonify({"error": str(e)}), 500
 
 
