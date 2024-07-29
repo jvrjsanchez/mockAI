@@ -21,4 +21,5 @@ const AnalysisCard = ({ analysis, title }: AnalysisCardProps) => {
     </>
   );
 };
+
 export default AnalysisCard;

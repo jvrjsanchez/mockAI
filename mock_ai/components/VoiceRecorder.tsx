@@ -26,7 +26,7 @@ export default function VoiceRecorder({
     audioBlob,
   } = useVoiceRecorder()!;
 
-  const { isLoading, error } = useUploadAudio();
+  const { isLoading } = useUploadAudio();
 
   const handleUpload = async (audioBlob: Blob) => {
     const formData = new FormData();
@@ -68,13 +68,11 @@ export default function VoiceRecorder({
     }
   }, [recordingComplete, audioBlob]);
 
-  console.log(selectedQuestion);
-
   return (
-    <div className="flex items-center justify-center h-screen w-full">
+    <div className="flex items-center justify-center h-screen w-full sm:w-auto">
       <div className="w-full">
         {(isRecording || transcript) && (
-          <div className="w-1/3 m-auto rounded-md border p-4 bg-white">
+          <div className="w-full sm:w-1/3 m-auto rounded-md border p-4 bg-white">
             <div className="flex-1 flex w-full justify-between">
               <div className="space-y-1">
                 <p className="text-sm font-medium leading-none">
@@ -92,7 +90,7 @@ export default function VoiceRecorder({
             </div>
 
             {transcript && (
-              <div className="border rounded-md p-2 h-full  mt-4">
+              <div className="border rounded-md p-2 h-full mt-4">
                 <p className="mb-0">{transcript}</p>
               </div>
             )}
@@ -139,7 +137,6 @@ export default function VoiceRecorder({
             </button>
           )}
 
-          {/* Render the filler word count */}
           {isLoading && (
             <div className="flex items-center mt-6 space-x-2">
               <svg
@@ -168,5 +165,5 @@ export default function VoiceRecorder({
         </div>
       </div>
     </div>
-  )
+  );
 }

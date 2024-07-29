@@ -1,13 +1,8 @@
 import sqlite3
 import logging
-import random
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
-
-
-default_score = random.randint(60, 100)
-
 
 # Initialize or connect to the SQLite database
 def init_db():
@@ -18,7 +13,8 @@ def init_db():
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user TEXT NOT NULL UNIQUE
+                user TEXT NOT NULL UNIQUE,
+                email TEXT NOT NULL UNIQUE
             )
         ''')
 
@@ -43,7 +39,8 @@ def init_db():
                 long_pauses TEXT NOT NULL,
                 pause_durations TEXT,
                 ai_feedback TEXT,
-                FOREIGN KEY (user_id) REFERENCES users (id)
+                interview_date TEXT,
+                FOREIGN KEY (user_id) REFERENCES users (id),
                 FOREIGN KEY (question_id) REFERENCES questions (id)
             )
         ''')
@@ -51,13 +48,11 @@ def init_db():
         conn.commit()
         logging.info("Database initialized successfully.")
 
-
-def add_user(user):
-
+def add_user(user, email):
     try:
         with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
-            cursor.execute('INSERT INTO users (user) VALUES (?)', (user,))
+            cursor.execute('INSERT INTO users (user, email) VALUES (?, ?)', (user, email))
             conn.commit()
             user_id = cursor.lastrowid
             logging.info(f"Added user: {user} with id: {user_id}")
@@ -74,7 +69,7 @@ def add_user(user):
 def get_all_users():
     with sqlite3.connect('MockAI.db') as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT id, user FROM users')
+        cursor.execute('SELECT id, user, email FROM users')
         users = cursor.fetchall()
         logging.info("Retrieved all users")
         return users
@@ -108,7 +103,7 @@ def get_user_by_email(email):
     try:
         with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT * FROM users WHERE user = ?', (email, ))
+            cursor.execute('SELECT * FROM users WHERE email = ?', (email, ))
             user = cursor.fetchone()
             logging.info(f"Retrieved user: {user}")
             return user[0]  # return primary key.
@@ -117,16 +112,14 @@ def get_user_by_email(email):
         return None
 
 
-def save_transcript(user_id, transcript, question_id, question, filler_word_count, long_pauses, pause_durations):
-
+def save_transcript(user_id, transcript, question_id, question, filler_word_count, long_pauses, pause_durations, score, feedback, interview_date):
     try:
-
         with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO results (user_id, question, question_id, score, transcript, filler_words, long_pauses, pause_durations)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (user_id, question, question_id, default_score, transcript, filler_word_count, long_pauses, pause_durations))
+                INSERT INTO results (user_id, question, question_id, score, transcript, filler_words, long_pauses, pause_durations, ai_feedback, interview_date)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (user_id, question, question_id, score, transcript, filler_word_count, long_pauses, pause_durations, feedback, interview_date))
 
             conn.commit()
             logging.info("Results saved successfully")
