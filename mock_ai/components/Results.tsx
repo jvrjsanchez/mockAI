@@ -14,7 +14,7 @@ const Results = () => {
 
   useEffect(() => {
     setEmail(user?.email)
-  }, [user?.email])
+  }, [user?.email]);
 
   useEffect(() => {
     if (email) {
@@ -24,11 +24,12 @@ const Results = () => {
           headers: { 'Content-Type': 'application/json' }
         })
         .then((response) => {
-          setResults([response.data])
+          setResults([response.data]);
+          console.log([response.data]);
         })
         .catch((error) => {
-          console.error('Error fetching results:', error)
-        })
+          console.error('Error fetching results:', error);
+        });
     }
   }, [email])
 
@@ -39,24 +40,24 @@ const Results = () => {
       axios
         .post(
           '/service/generate_ai_response',
-          { user: user.email },
+          { user: email, question: results[0].question },
           {
             headers: { 'Content-Type': 'application/json' }
           }
         )
         .then((response) => {
-          setAnalysis([response.data.response])
+          setAnalysis([response.data.response]);
         })
         .catch((error) => {
           console.error('Error fetching results:', error)
         })
         .finally(() => setAnalysisLoading(false))
     }
-  }, [email])
+  }, [results]);
 
   const handleSaveToggle = () => {
-    setSaveResults(!saveResults)
-  }
+    setSaveResults(!saveResults);
+  };
 
   const handleSaveResults = () => {
     if (saveResults) {
@@ -113,6 +114,7 @@ const Results = () => {
               <p><strong>Filler Words:</strong> {result.filler_words}</p>
               <p><strong>Long Pauses:</strong> {result.long_pauses}</p>
               <p><strong>Pause Durations:</strong> {result.pause_durations}</p>
+              <p><strong>Interview Date:</strong> {result.interview_date}</p>
             </div>
           ))}
           {analysisLoading && (

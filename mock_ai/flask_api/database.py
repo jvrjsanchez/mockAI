@@ -19,6 +19,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user TEXT NOT NULL UNIQUE
+                email TEXT NOT NULL UNIQUE
             )
         ''')
 
@@ -43,7 +44,8 @@ def init_db():
                 long_pauses TEXT NOT NULL,
                 pause_durations TEXT,
                 ai_feedback TEXT,
-                FOREIGN KEY (user_id) REFERENCES users (id)
+                interview_date TEXT,
+                FOREIGN KEY (user_id) REFERENCES users (id),
                 FOREIGN KEY (question_id) REFERENCES questions (id)
             )
         ''')
@@ -117,7 +119,7 @@ def get_user_by_email(email):
         return None
 
 
-def save_transcript(user_id, transcript, question_id, question, filler_word_count, long_pauses, pause_durations):
+def save_transcript(user_id, transcript, question, question_id, filler_word_count, long_pauses, pause_durations, score, ai_feedback, interview_date):
 
     try:
 
@@ -126,7 +128,7 @@ def save_transcript(user_id, transcript, question_id, question, filler_word_coun
             cursor.execute('''
                 INSERT INTO results (user_id, question, question_id, score, transcript, filler_words, long_pauses, pause_durations)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (user_id, question, question_id, default_score, transcript, filler_word_count, long_pauses, pause_durations))
+            ''', (user_id, question_id, question, score, transcript, filler_word_count, long_pauses, pause_durations, ai_feedback, interview_date))
 
             conn.commit()
             logging.info("Results saved successfully")
@@ -151,7 +153,7 @@ def get_last_transcript(user_id):
         return None
 
 
-def update_feedback(user_id, feedback):
+def update_feedback(user_id, ai_feedback):
     try:
         with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
@@ -164,7 +166,7 @@ def update_feedback(user_id, feedback):
                                 ORDER BY id DESC
                                 LIMIT 1
                             )
-                        ''', (feedback, user_id))
+                        ''', (ai_feedback, user_id))
             conn.commit()
             logging.info("Feedback updated successfully")
             return True

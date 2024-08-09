@@ -9,6 +9,7 @@ from database import init_db, add_user, get_all_users, add_question, get_all_que
 import sqlite3
 from genai_utils import prompt_with_audio_file, extract_analysis_results
 import google.generativeai as genai
+from datetime import datetime
 
 
 app = Flask(__name__)
@@ -21,6 +22,7 @@ load_dotenv()
 #      - path: mock_ai/api/.env
 API_KEY = os.getenv("DG_API_KEY")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+PROMPT_TO_AI_INTERVIEWER = os.getenv("PROMPT_TO_AI_INTERVIEWER")
 PROMPT_TO_AI = os.getenv("PROMPT_TO_AI")
 
 # Gemini configuration
@@ -42,7 +44,6 @@ def upload_audio():
         return jsonify({"error": "User and question are required"}), 400
 
     user = request.form.get('user')
-
     question = request.form.get('question')
     questionId = None
 
@@ -94,14 +95,30 @@ def upload_audio():
         long_pauses, pause_durations, transcript, filler_word_count_json = extract_analysis_results(
             analysis_results)
 
-        save_transcript(userId, transcript, questionId, question[2:],
-                        filler_word_count_json, long_pauses, 0 if len(pause_durations) == 0 else json.dumps(pause_durations))
+prompt = f"You are an interview feedback analysis for a website called 'MockAI'. Please asses a interviewees answer to the following: {question}. Give them a made up score 60 out of 100. Thank them for their answer, and sign your name as 'MockAI'. DO NOT include any markdown in your response. Encourage them to keep coming back to MockAI to practice their interviewing skills. Address them by their name if you understood it."
+#Generate score and feedback using Google Gemini
+gemini_response = prompt_with_audio_file(prompt, audio_file_path, genai)
+feedback = gemini_response.text
+score = gemini_response.metadata.get('score', 0)
+print(f"Score: {score}")
 
-        return jsonify(analyze_audio(response))
+interview_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    except Exception as e:
-        print(f"Exception: {e}")
-        return jsonify({"error": str(e)})
+save_transcript(userId, transcript, question, filler_word_count_json, long_pauses, 0 if len(pause_durations) == 0 else json.dumps(pause_durations))
+
+    return jsonify({
+        "transcript": transcript,
+        "score": score,
+        "feedback": feedback,
+        "long_pauses": long_pauses,
+        "pause_durations": pause_durations,
+        "filler_words": filler_word_count_json,
+        "interview_date": interview_date
+        })
+        
+        except Exception as e:
+             print(f"Exception: {e}")
+            return jsonify({"error": str(e)})
 
 
 @app.route('/service/health', methods=['GET'])
@@ -138,6 +155,7 @@ def get_emails_route():
 def add_question_route():
     data = request.get_json()
     question = data.get('question')
+    print(question)
 
     if not question:
         return jsonify({"error": "Question is required"}), 400
@@ -150,7 +168,7 @@ def add_question_route():
     return jsonify({"id": question_id, "question": question})
 
 
-@app.route('/service/get_questions', methods=['GET'])
+@app.route('/service/get_question', methods=['GET'])
 def get_questions_route():
     questions = get_all_questions()
     return jsonify(questions)
@@ -172,10 +190,11 @@ def save_results():
             for result in results:
                 cursor.execute('''
                    UPDATE results
-                   SET question = ?, score = ?,  long_pauses = ?, 
-                   filler_words = ?, pause_durations = ?
+                   SET question = ?, score = ?,  transcript = ?, 
+                   filler_words = ?, long_pauses = ?, pause_durations = ?,
+                    feedback = ?, interview_date = ?, 
                    where id = ?
-                ''', (result['question'], result['score'], result['long_pauses'], result['filler_words'], result['pause_durations'], result['id']))
+                ''', (results['question'], results['score'], results['transcript'], results['filler_words'], results['pause_durations'], results['pause_durations'], results['feedback'], results['interview_date'], results['id']))
             conn.commit()
             return jsonify({"message": "Results saved successfully"})
     except Exception as e:
@@ -203,8 +222,8 @@ def get_results():
                 'filler_words': results[6],
                 'long_pauses': results[7],
                 'pause_durations': results[8],
-                'ai_feedback': '' if not results[9]
-                else results[9],
+                'ai_feedback': '' if not results[9] else results[9],
+                'interview_date' : results[10]
             })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -223,15 +242,16 @@ def get_all_results():
             ''', (userId,)).fetchall()
             return jsonify([
                 {
-                    'id': result[0],
-                    'user': result[1],
-                    'question': result[3],
-                    'score': result[4],
-                    'transcript': result[5],
-                    'filler_words': result[6],
-                    'long_pauses': result[7],
-                    'pause_durations': result[8],
-                    'ai_feedback': '' if not result[9] else result[9]
+                    'id': results[0],
+                    'user': results[1],
+                    'question': results[3],
+                    'score': results[4],
+                    'transcript': results[5],
+                    'filler_words': results[6],
+                    'long_pauses': results[7],
+                    'pause_durations': results[8],
+                    'ai_feedback': '' if not results[9] else results[9],
+                    'interview_date' : results[10]
                 }
                 for result in results
             ])
@@ -242,27 +262,67 @@ def get_all_results():
 def generate_ai_response():
 
     try:
+
         data = request.get_json()
         user = data.get('user')
         userId = get_user_by_email(user)
+        question = data.get('question')
+        logging.debug(data)
+
+        if not question:
+            raise ValueError("Questions not provided")
 
         # Get the last transcript saved for the user
         # NOTE Not used as we pass the audio to the AI model. We can use this if we have problems saving audio in deployment.
         # transcript = get_last_transcript(userId)
         # print("transcript from db [not in use]: ", transcript)
 
-        gemini_response = prompt_with_audio_file(
-            PROMPT_TO_AI, audio_file_path, genai)
+        prompt = f"You are an interview feedback analysis for a website called 'MockAI'. Please asses the interviewer's answer to the following: {question}. Give them a made up score 60 out of 100. Thank them for their answer, and sign your name as 'MockAI'. DO NOT include any markdown in your response. Encourage them to keep coming back to MockAI to practice their interviewing skills. Address them by their name if you understood it. "
 
-        if gemini_response and gemini_response.text and user:
-            update_feedback(userId, gemini_response.text)
+        logging.debug(f"Prompt: {prompt}")
+
+        gemini_response = prompt_with_audio_file(
+            prompt, './audio.wav', genai)
+        if gemini_response is None:
+            raise ValueError("No response from Gemini")
+        
+        feedback = gemini_response.text
+        print(f"Feedback: {gemini_response}")
+        score = 0 #gemini_response.metadata.get('score', 0) if gemini_response.metadata else 0 
+
+        logging.debug(f"Response from Gemini : {gemini_response.text}, Score: {score}")
+
+
+        if gemini_response and feedback and user:
+            update_feedback(userId, feedback)
         else:
             print("No response from Gemini and user not provided.")
 
-        return jsonify({"response": gemini_response.text})
+        return jsonify({"response": feedback})
     except Exception as e:
         print(f"An error occurred: {e}")
         return jsonify({"error": str(e)}), 500
+
+@app.route('/service/generate_interview_question', methods=["GET"])
+def generate_interview_question():
+    try:
+        prompt = "You are an interviewer for a website called 'mockAI'. Ask a question to the interviewee and your job is to help them improve, but remember, many interviewees have interview anxiety. The goal of is not to be too harsh, but give brief feedback where the job seeker can improve. Give them a made up score 60 out of 100. Thank them for their answer, and sign your name as 'MockAI'. DO NOT include any markdown in your response. Encourage them to keep coming back to MockAI to practice their interviewing skills. Address them by their name if you understood it."
+
+        logging.debug(f"Prompt: {prompt}")
+        gemini_response = model.generate_content(prompt)
+
+        if gemini_response and gemini_response.text:
+            question = gemini_response.text
+            add_question(question)
+            return question
+        else:
+            print("No response from Gemini and user not provided.")
+            return jsonify({"error": "No response from Gemini"}), 500
+    except Exception as e:
+        logging.error(f"Exception: {e}")
+        return jsonify({"error": str(e)}), 500
+    
+        
 
 
 if __name__ == '__main__':

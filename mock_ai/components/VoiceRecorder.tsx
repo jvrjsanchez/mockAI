@@ -16,6 +16,7 @@ export default function VoiceRecorder ({
   const [feedback, setFeedback] = useState<Feedback | null>(null)
   const [showFeedback, setShowFeedback] = useState(false)
 
+
   const {
     isRecording,
     recordingComplete,
@@ -24,9 +25,9 @@ export default function VoiceRecorder ({
     startRecording,
     stopRecording,
     audioBlob
-  } = useVoiceRecorder()!
+  } = useVoiceRecorder()!;
 
-  const { isLoading, error } = useUploadAudio()
+  const { isLoading } = useUploadAudio()
 
   const handleUpload = async (audioBlob: Blob) => {
     const formData = new FormData()
@@ -39,24 +40,44 @@ export default function VoiceRecorder ({
         'http://localhost:3001/service/upload_audio',
         {
           method: 'POST',
-          body: formData
+          body: formData,
         }
       )
-      const data = await response.json()
-      setFeedback(data)
-      setShowFeedback(true)
+      const data = await response.json();
+      setFeedback(data);
+      setShowFeedback(true);
     } catch (error) {
       console.error('Error uploading audio file:', error)
-      setFeedback(null)
-      setShowFeedback(false)
+      setFeedback(null);
+      setShowFeedback(false);
     }
   }
 
+  const generateAIResponse = async (user: string, question: string) => {
+    try {
+      const = await fetch('/service/generate_ai_response', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user, question }),
+      });
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      setFeedback(data.response);
+
+      } catch (error) {
+        console.log('Error ', error)
+      }
+    }
+  }
   const handleToggleRecording = async () => {
     if (!isRecording) {
       startRecording()
     } else {
-      stopRecording()
+      stopRecording();
     }
   }
 
