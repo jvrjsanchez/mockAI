@@ -8,9 +8,11 @@ const nextConfig = {
       {
         source: "/service/:path*",
         destination:
-          process.env.NEXT_PUBLIC_VERCEL_URL
-            ? "http://127.0.0.1:3001/service/:path*"
-            : "/flask_api/",
+          process.env.NODE_ENV === "production"
+            ? "/flask_api/"
+            : "http://127.0.0.1:3001/service/:path*",
+
+        // Resource: https://vercel.com/docs/projects/environment-variables/system-environment-variables
       },
     ];
   },
