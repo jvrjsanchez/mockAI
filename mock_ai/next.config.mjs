@@ -8,7 +8,7 @@ const nextConfig = {
       {
         source: "/service/:path*",
         destination:
-          process.env.NODE_ENV === "development"
+          process.env.NEXT_PUBLIC_VERCEL_URL === "development"
             ? "http://127.0.0.1:3001/service/:path*"
             : "/flask_api/",
       },
