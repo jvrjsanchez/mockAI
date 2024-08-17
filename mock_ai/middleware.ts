@@ -6,10 +6,11 @@ export async function middleware(req: NextRequest) {
 
   try {
     const { user } = (await getSession(req, res)) || {};
+    const URL = process.env.NEXT_PUBLIC_VERCEL_URL
 
     if (user) {
       const response = await fetch(
-        process.env.NODE_ENV === "development"
+        process.env.NEXT_PUBLIC_VERCEL_URL === "development"
         ? "http://localhost:3001/service/add_user"
         : "/service/add_user",
         {
