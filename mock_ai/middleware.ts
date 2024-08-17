@@ -9,7 +9,7 @@ export async function middleware(req: NextRequest) {
     const URL =
       process.env.NODE_ENV === "development"
         ? "http://localhost:3001/service/upload_audio"
-        : "/service/upload_audio";
+        : `https://${process.env.NEXT_PUBLIC_VERCEL_URL}/service/upload_audio`;
 
     if (user) {
       const response = await fetch(URL, {
