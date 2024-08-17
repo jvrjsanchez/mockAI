@@ -8,11 +8,11 @@ export async function middleware(req: NextRequest) {
     const { user } = (await getSession(req, res)) || {};
     const URL =
       process.env.NODE_ENV === "development"
-        ? "http://localhost:3001"
-        : "";
+        ? "http://localhost:3001/service/upload_audio"
+        : process.env.NEXT_PUBLIC_VERCEL_URL || "";
 
     if (user) {
-      const response = await fetch(`${URL}/service/upload_audio`, {
+      const response = await fetch(URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -34,7 +34,9 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   } catch (error) {
     console.error("Error in middleware:", error);
-    return NextResponse.error();
+    return new NextResponse("Internal Server Error", {
+      status: 500,
+    });
   }
 }
 
