@@ -11,6 +11,8 @@ export async function middleware(req: NextRequest) {
         ? "http://localhost:3001/service/upload_audio"
         : `https://${process.env.NEXT_PUBLIC_VERCEL_URL}/service/upload_audio`;
 
+    console.log("ENV: ", process.env.NEXT_PUBLIC_VERCEL_URL);
+
     if (user) {
       const response = await fetch(URL, {
         method: "POST",
@@ -22,7 +24,7 @@ export async function middleware(req: NextRequest) {
           email: user.email,
         }),
       });
-
+      console.log("Response from Flask:", response.text());
       const responseFromFlask = await response.json();
 
       console.log("Response from Flask:", responseFromFlask);
