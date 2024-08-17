@@ -9,8 +9,9 @@ export async function middleware(req: NextRequest) {
 
     if (user) {
       const response = await fetch(
-        "http://localhost:3001/service/add_user",
-
+        process.env.NODE_ENV === "development"
+        ? "http://localhost:3001/service/add_user"
+        : "/service/add_user",
         {
           method: "POST",
           headers: {
