@@ -19,7 +19,7 @@ const AnalysisCard = ({ analysis, title }: AnalysisCardProps) => {
           </article>
         ))}
     </>
-  );
-};
+  )
+}
 
-export default AnalysisCard;
+export default AnalysisCard

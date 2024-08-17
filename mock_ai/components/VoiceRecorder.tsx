@@ -1,20 +1,20 @@
-"use client";
-import { useState, useEffect } from "react";
-import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
-import useUploadAudio from "@/hooks/useUpload";
-import { Feedback } from "@/types";
+'use client'
+import { useState, useEffect } from 'react'
+import { useVoiceRecorder } from '@/hooks/useVoiceRecorder'
+import useUploadAudio from '@/hooks/useUpload'
+import { Feedback } from '@/types'
 
 interface VoiceRecorderProps {
   selectedQuestion: string;
   user: any;
 }
 
-export default function VoiceRecorder({
+export default function VoiceRecorder ({
   selectedQuestion,
-  user,
+  user
 }: VoiceRecorderProps) {
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
-  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedback, setFeedback] = useState<Feedback | null>(null)
+  const [showFeedback, setShowFeedback] = useState(false)
 
   const {
     isRecording,
@@ -23,50 +23,50 @@ export default function VoiceRecorder({
     transcript,
     startRecording,
     stopRecording,
-    audioBlob,
-  } = useVoiceRecorder()!;
+    audioBlob
+  } = useVoiceRecorder()!
 
-  const { isLoading } = useUploadAudio();
+  const { isLoading } = useUploadAudio()
 
   const handleUpload = async (audioBlob: Blob) => {
-    const formData = new FormData();
-    formData.append("audio", audioBlob);
-    formData.append("user", user.email);
-    formData.append("question", selectedQuestion);
+    const formData = new FormData()
+    formData.append('audio', audioBlob)
+    formData.append('user', user.email)
+    formData.append('question', selectedQuestion)
 
     try {
       const response = await fetch(
-        "http://localhost:3001/service/upload_audio",
+        'http://localhost:3001/service/upload_audio',
         {
-          method: "POST",
-          body: formData,
+          method: 'POST',
+          body: formData
         }
-      );
-      const data = await response.json();
-      setFeedback(data);
-      setShowFeedback(true);
+      )
+      const data = await response.json()
+      setFeedback(data)
+      setShowFeedback(true)
     } catch (error) {
-      console.error("Error uploading audio file:", error);
-      setFeedback(null);
-      setShowFeedback(false);
+      console.error('Error uploading audio file:', error)
+      setFeedback(null)
+      setShowFeedback(false)
     }
-  };
+  }
 
   const handleToggleRecording = async () => {
     if (!isRecording) {
-      startRecording();
+      startRecording()
     } else {
-      stopRecording();
+      stopRecording()
     }
-  };
+  }
 
   useEffect(() => {
     if (recordingComplete && audioBlob) {
       // reset feedback
-      setFeedback(null);
-      handleUpload(audioBlob);
+      setFeedback(null)
+      handleUpload(audioBlob)
     }
-  }, [recordingComplete, audioBlob]);
+  }, [recordingComplete, audioBlob])
 
   return (
     <div className="flex items-center justify-center h-screen w-full sm:w-auto">
@@ -76,12 +76,12 @@ export default function VoiceRecorder({
             <div className="flex-1 flex w-full justify-between">
               <div className="space-y-1">
                 <p className="text-sm font-medium leading-none">
-                  {isRecording ? "Recording" : "Recorded"}
+                  {isRecording ? 'Recording' : 'Recorded'}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {isRecording
-                    ? "What are your thoughts on this question?"
-                    : "Thank you for your interview."}
+                    ? 'What are your thoughts on this question?'
+                    : 'Thank you for your interview.'}
                 </p>
               </div>
               {isRecording && (
@@ -103,7 +103,8 @@ export default function VoiceRecorder({
         )}
 
         <div className="flex items-center w-full justify-center mt-6">
-          {isRecording ? (
+          {isRecording
+            ? (
             <button
               onClick={handleToggleRecording}
               className="mt-10 m-auto flex items-center justify-center bg-red-400 hover:bg-red-500 rounded-full w-20 h-20 focus:outline-none"
@@ -119,7 +120,8 @@ export default function VoiceRecorder({
                 />
               </svg>
             </button>
-          ) : (
+              )
+            : (
             <button
               onClick={handleToggleRecording}
               className="mt-10 m-auto flex items-center justify-center bg-blue-400 hover:bg-blue-500 rounded-full w-20 h-20 focus:outline-none"
@@ -135,7 +137,7 @@ export default function VoiceRecorder({
                 />
               </svg>
             </button>
-          )}
+              )}
 
           {isLoading && (
             <div className="flex items-center mt-6 space-x-2">
@@ -165,5 +167,5 @@ export default function VoiceRecorder({
         </div>
       </div>
     </div>
-  );
+  )
 }

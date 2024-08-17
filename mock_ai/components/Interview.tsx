@@ -1,37 +1,37 @@
-"use client";
-import { useUser } from "@auth0/nextjs-auth0/client";
-import VoiceRecorder from "./VoiceRecorder";
-import { useState, useEffect } from "react";
-import axios from "axios";
-import AnalysisCard from "./AnalysisCard";
+'use client'
+import { useUser } from '@auth0/nextjs-auth0/client'
+import VoiceRecorder from './VoiceRecorder'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+import AnalysisCard from './AnalysisCard'
 
 const Interview = () => {
-  const { user, error, isLoading } = useUser();
-  const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null);
+  const { user, error, isLoading } = useUser()
+  const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchQuestion = async () => {
       try {
-        const response = await axios.get("/service/generate_interview_question", {
-          headers: { "Content-Type": "application/json" },
-        });
-        setSelectedQuestion(response.data.question);
+        const response = await axios.get('/service/generate_interview_question', {
+          headers: { 'Content-Type': 'application/json' }
+        })
+        setSelectedQuestion(response.data.question)
       } catch (error) {
-        console.error("Error fetching interview question from Gemini:", error);
+        console.error('Error fetching interview question from Gemini:', error)
       }
-    };
+    }
 
     if (user) {
-      fetchQuestion();
+      fetchQuestion()
     }
-  }, [user]);
+  }, [user])
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>Loading...</div>
   }
 
   if (error) {
-    return <div>Error: {error.message}</div>;
+    return <div>Error: {error.message}</div>
   }
 
   if (!user) {
@@ -45,7 +45,7 @@ const Interview = () => {
           </button>
         </div>
       </div>
-    );
+    )
   } else {
     return (
       <div className="hero items-center sm:flex-row sm:items-start">
@@ -64,8 +64,8 @@ const Interview = () => {
           </button>
         </div>
       </div>
-    );
+    )
   }
-};
+}
 
-export default Interview;
+export default Interview

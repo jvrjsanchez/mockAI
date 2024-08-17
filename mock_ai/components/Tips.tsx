@@ -1,4 +1,4 @@
-export default function Tips() {
+export default function Tips () {
   return (
     <div className="relative min-h-screen bg-[#fdf4ff] text-gray-800 p-8 pt-20">
       <section className="mt-20">
