@@ -3,6 +3,7 @@ import { useUser } from '@auth0/nextjs-auth0/client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import axios from 'axios'
+import React from 'react'
 
 const UserAccount = () => {
   const { user, error, isLoading } = useUser()

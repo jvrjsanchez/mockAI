@@ -16,7 +16,7 @@ export default function Tips () {
               Stay Positive
             </h3>
             <p>
-              Positivity can significantly impact your interview's
+              Positivity can significantly impact your interviews
               outcome. Remember to smile and maintain a positive
               demeanor.
             </p>

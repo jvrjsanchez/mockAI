@@ -63,6 +63,8 @@ export default function VoiceRecorder ({
   useEffect(() => {
     if (recordingComplete && audioBlob) {
       // reset feedback
+      console.log(feedback)
+      console.log(showFeedback)
       setFeedback(null)
       handleUpload(audioBlob)
     }
