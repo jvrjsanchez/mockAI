@@ -307,4 +307,4 @@ def generate_interview_question():
 
 if __name__ == '__main__':
     init_db()
-    app.run(port=3001, debug=True)
+    app.run()
