@@ -20,7 +20,7 @@ const Results = () => {
     if (email) {
       axios
         .get('/service/get_results', {
-          params: { user: user.email },
+          params: { user: user?.email },
           headers: { 'Content-Type': 'application/json' }
         })
         .then((response) => {
@@ -39,7 +39,7 @@ const Results = () => {
       axios
         .post(
           '/service/generate_ai_response',
-          { user: user.email },
+          { user: user?.email },
           {
             headers: { 'Content-Type': 'application/json' }
           }
@@ -61,7 +61,7 @@ const Results = () => {
   const handleSaveResults = () => {
     if (saveResults) {
       axios
-        .post('/service/save_results', { user: user.email, results })
+        .post('/service/save_results', { user: user?.email, results })
         .then(() => {
           alert('Results saved successfully.')
         })
