@@ -9,7 +9,7 @@ export async function middleware(req: NextRequest) {
     const URL =
       process.env.NODE_ENV === "development"
         ? "http://localhost:3001/service/upload_audio"
-        : `https://${process.env.NEXT_PUBLIC_VERCEL_URL}/service/upload_audio`;
+        : `${process.env.NEXT_PUBLIC_VERCEL_URL}service/upload_audio`;
 
     console.log("ENV: ", process.env.NEXT_PUBLIC_VERCEL_URL);
 
@@ -24,7 +24,7 @@ export async function middleware(req: NextRequest) {
           email: user.email,
         }),
       });
-      console.log("Response from Flask:", response.text());
+
       const responseFromFlask = await response.json();
 
       console.log("Response from Flask:", responseFromFlask);
