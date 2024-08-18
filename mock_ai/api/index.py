@@ -8,7 +8,7 @@ from deepgram import DeepgramClient, PrerecordedOptions, FileSource  # type: ign
 from flask_cors import CORS
 from dotenv import load_dotenv
 from api.audio_analysis import analyze_audio
-from api.database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript, update_feedback
+from api.database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript,
 import sqlite3
 from api.genai_utils import prompt_with_audio_file, extract_analysis_results
 import google.generativeai as genai
@@ -233,61 +233,61 @@ def get_results():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route('/service/get_all_results', methods=['GET'])
-def get_all_results():
-    try:
-        user = request.args.get('user').strip()
-        user = str(user)
-        userId = get_user_by_email(user)
+# @app.route('/service/get_all_results', methods=['GET'])
+# def get_all_results():
+#     try:
+#         user = request.args.get('user').strip()
+#         user = str(user)
+#         userId = get_user_by_email(user)
 
-        with sqlite3.connect('MockAI.db') as conn:
-            cursor = conn.cursor()
-            results = cursor.execute('''
-                SELECT * FROM results WHERE user_id = ? ORDER BY id DESC
-            ''', (userId,)).fetchall()
-            return jsonify([
-                {
-                    'id': result[0],
-                    'user': result[1],
-                    'question': result[3],
-                    'score': result[4],
-                    'transcript': result[5],
-                    'filler_words': result[6],
-                    'long_pauses': result[7],
-                    'pause_durations': result[8],
-                    'ai_feedback': '' if not result[9] else result[9],
-                    'interview_date': result[10],
-                }
-                for result in results
-            ])
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+#         with sqlite3.connect('MockAI.db') as conn:
+#             cursor = conn.cursor()
+#             results = cursor.execute('''
+#                 SELECT * FROM results WHERE user_id = ? ORDER BY id DESC
+#             ''', (userId,)).fetchall()
+#             return jsonify([
+#                 {
+#                     'id': result[0],
+#                     'user': result[1],
+#                     'question': result[3],
+#                     'score': result[4],
+#                     'transcript': result[5],
+#                     'filler_words': result[6],
+#                     'long_pauses': result[7],
+#                     'pause_durations': result[8],
+#                     'ai_feedback': '' if not result[9] else result[9],
+#                     'interview_date': result[10],
+#                 }
+#                 for result in results
+#             ])
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
 
 
-@app.route('/service/generate_ai_response', methods=['POST', 'GET'])
-def generate_ai_response():
-    try:
-        data = request.get_json()
-        user = data.get('user')
-        userId = get_user_by_email(user)
+# @app.route('/service/generate_ai_response', methods=['POST', 'GET'])
+# def generate_ai_response():
+#     try:
+#         data = request.get_json()
+#         user = data.get('user')
+#         userId = get_user_by_email(user)
 
-        # Get the last transcript saved for the user
-        # NOTE Not used as we pass the audio to the AI model. We can use this if we have problems saving audio in deployment.
-        # transcript = get_last_transcript(userId)
-        # print("transcript from db [not in use]: ", transcript)
+#         # Get the last transcript saved for the user
+#         # NOTE Not used as we pass the audio to the AI model. We can use this if we have problems saving audio in deployment.
+#         # transcript = get_last_transcript(userId)
+#         # print("transcript from db [not in use]: ", transcript)
 
-        gemini_response = prompt_with_audio_file(
-            PROMPT_TO_AI, audio_file_path, genai)
+#         gemini_response = prompt_with_audio_file(
+#             PROMPT_TO_AI, audio_file_path, genai)
 
-        if gemini_response and gemini_response.text and user:
-            update_feedback(userId, gemini_response.text)
-        else:
-            print("No response from Gemini and user not provided.")
+#         if gemini_response and gemini_response.text and user:
+#             update_feedback(userId, gemini_response.text)
+#         else:
+#             print("No response from Gemini and user not provided.")
 
-        return jsonify({"response": gemini_response.text})
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return jsonify({"error": str(e)}), 500
+#         return jsonify({"response": gemini_response.text})
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
+#         return jsonify({"error": str(e)}), 500
 
 
 @app.route('/service/generate_interview_question', methods=['GET'])

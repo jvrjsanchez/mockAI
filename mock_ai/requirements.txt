@@ -2,10 +2,6 @@
 deepgram-sdk==3.3.1
 Flask==3.0.3
 Flask-Cors==4.0.1
-# Flask-Migrate==4.0.7
-Flask-SQLAlchemy==3.1.1
 google-generativeai==0.7.1
-python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 Werkzeug==3.0.3
-yarl==1.9.4
