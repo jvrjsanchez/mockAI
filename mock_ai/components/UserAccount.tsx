@@ -1,39 +1,40 @@
-"use client"
-import { useUser } from "@auth0/nextjs-auth0/client"
-import { useState, useEffect } from "react";
-import Link from "next/link"
-import axios from "axios";
+'use client'
+import { useUser } from '@auth0/nextjs-auth0/client'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import axios from 'axios'
+import React from 'react'
 
 const UserAccount = () => {
-    const { user, error, isLoading } = useUser()
-    const [feedbacks, setFeedbacks] = useState<any[]>([]);
-    const [selectedFeedback, setSelectedFeedback] = useState<any>(null);
+  const { user, error, isLoading } = useUser()
+  const [feedbacks, setFeedbacks] = useState<any[]>([])
+  const [selectedFeedback, setSelectedFeedback] = useState<any>(null)
 
-    useEffect(() => {
-        if (user) {
-            axios.get("/service/get_all_results", {
-                params: { user: user.email },
-                headers: { "Content-Type": "application/json" }
-            })
-            .then(response => {
-                setFeedbacks(response.data);
-                setSelectedFeedback(response.data[0]);
-            })
-            .catch(error => console.error("Error fetching feedbacks:", error));
-        }
-    }, [user]);
+  useEffect(() => {
+    if (user) {
+      axios.get('/service/get_all_results', {
+        params: { user: user.email },
+        headers: { 'Content-Type': 'application/json' }
+      })
+        .then(response => {
+          setFeedbacks(response.data)
+          setSelectedFeedback(response.data[0])
+        })
+        .catch(error => console.error('Error fetching feedbacks:', error))
+    }
+  }, [user])
 
-    const handleFeedbackChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const feedbackId = parseInt(event.target.value, 10);
-        const feedback = feedbacks.find(feedback => feedback.id === feedbackId);
-        setSelectedFeedback(feedback);
-    };
+  const handleFeedbackChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const feedbackId = parseInt(event.target.value, 10)
+    const feedback = feedbacks.find(feedback => feedback.id === feedbackId)
+    setSelectedFeedback(feedback)
+  }
 
-    if (isLoading) return <div>Loading...</div>
-    if (error) return <div>{error.message}</div>
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>{error.message}</div>
 
-    if (!user) {
-        return (
+  if (!user) {
+    return (
           <div className="hero">
             <div className="flex-1 pt-36 padding-x">
               <h1 className="text-2xl font-bold">
@@ -49,9 +50,9 @@ const UserAccount = () => {
               </button>
             </div>
           </div>
-        );
-    } else {
-        return (
+    )
+  } else {
+    return (
           <div className="hero">
             <div className="flex-1 pt-36 padding-x">
               <h1 className="text-2xl font-bold">
@@ -73,7 +74,7 @@ const UserAccount = () => {
                       name="feedback"
                       className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                       onChange={handleFeedbackChange}
-                      value={selectedFeedback?.id || ""}
+                      value={selectedFeedback?.id || ''}
                     >
                       {feedbacks.map(feedback => (
                         <option key={feedback.id} value={feedback.id}>
@@ -106,8 +107,8 @@ const UserAccount = () => {
               </>
             </div>
           </div>
-        )
-    }
+    )
+  }
 }
 
 export default UserAccount

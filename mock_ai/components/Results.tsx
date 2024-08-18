@@ -1,84 +1,97 @@
-"use client";
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { useUser } from "@auth0/nextjs-auth0/client";
-import AnalysisCard from "./AnalysisCard";
+'use client'
+import React, { useEffect, useState } from 'react'
+import axios from 'axios'
+import { useUser } from '@auth0/nextjs-auth0/client'
+import AnalysisCard from './AnalysisCard'
 
 const Results = () => {
-  const { user } = useUser();
-  const [results, setResults] = useState<any[]>([]);
-  const [saveResults, setSaveResults] = useState(false);
-  const [analysis, setAnalysis] = useState<any>(null);
-  const [analysisLoading, setAnalysisLoading] = useState(false);
-  const [email, setEmail] = useState(user?.email);
+  const { user } = useUser()
+  const [results, setResults] = useState<any[]>([])
+  const [saveResults, setSaveResults] = useState(false)
+  const [analysis, setAnalysis] = useState<any>(null)
+  const [analysisLoading, setAnalysisLoading] = useState(false)
+  const [email, setEmail] = useState(user?.email)
 
   useEffect(() => {
-    setEmail(user?.email);
-  }, [user?.email]);
+    setEmail(user?.email)
+  }, [user?.email])
 
   useEffect(() => {
     if (email) {
       axios
-        .get("/service/get_results", {
-          params: { user: user.email },
-          headers: { "Content-Type": "application/json" },
+        .get('/service/get_results', {
+          params: { user: user?.email },
+          headers: { 'Content-Type': 'application/json' }
         })
         .then((response) => {
+<<<<<<< HEAD
           setResults([response.data]);
           console.log([response.data]);
+=======
+          setResults([response.data])
+>>>>>>> main
         })
         .catch((error) => {
-          console.error("Error fetching results:", error);
-        });
+          console.error('Error fetching results:', error)
+        })
     }
-  }, [email]);
+  }, [email])
 
   useEffect(() => {
     if (email) {
-      setAnalysisLoading(true);
+      setAnalysisLoading(true)
 
       axios
         .post(
+<<<<<<< HEAD
           "/service/generate_ai_response",
           { user: email, question: results[0].question },
+=======
+          '/service/generate_ai_response',
+          { user: user?.email },
+>>>>>>> main
           {
-            headers: { "Content-Type": "application/json" },
+            headers: { 'Content-Type': 'application/json' }
           }
         )
         .then((response) => {
-          setAnalysis([response.data.response]);
+          setAnalysis([response.data.response])
         })
         .catch((error) => {
-          console.error("Error fetching results:", error);
+          console.error('Error fetching results:', error)
         })
-        .finally(() => setAnalysisLoading(false));
+        .finally(() => setAnalysisLoading(false))
     }
+<<<<<<< HEAD
   }, [results]);
+=======
+  }, [email])
+>>>>>>> main
 
   const handleSaveToggle = () => {
-    setSaveResults(!saveResults);
-  };
+    setSaveResults(!saveResults)
+  }
 
   const handleSaveResults = () => {
     if (saveResults) {
       axios
-        .post("/service/save_results", { user: user.email, results })
+        .post('/service/save_results', { user: user?.email, results })
         .then(() => {
-          alert("Results saved successfully.");
+          alert('Results saved successfully.')
         })
         .catch((error) => {
-          console.error("Error saving results:", error);
-        });
+          console.error('Error saving results:', error)
+        })
     }
-  };
+  }
 
   const handleStartNewInterview = () => {
-    window.location.href = "/interview";
-  };
+    window.location.href = '/interview'
+  }
 
   const handleSignOut = () => {
-    window.location.href = "/api/auth/logout";
-  };
+    window.location.href = '/api/auth/logout'
+  }
 
   if (!user) {
     return (
@@ -97,7 +110,7 @@ const Results = () => {
           </button>
         </div>
       </div>
-    );
+    )
   } else {
     return (
       <div className="hero">
@@ -159,8 +172,8 @@ const Results = () => {
           </div>
         </div>
       </div>
-    );
+    )
   }
-};
+}
 
-export default Results;
+export default Results

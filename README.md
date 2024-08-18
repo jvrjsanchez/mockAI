@@ -1,19 +1,19 @@
-pip# mockAI
 
-## The behavioral mock interview API powered by AI
 
-### Quick start for dev team
+## 🎤 The behavioral mock interview app powered by AI
 
-This README will be updated throughout the development process. The following is a quick start guide for the development team. RUNNING npm run dev or npm run flask-dev `will install the requirements.txt for you.` You still need to do an npm install in the root directory of mock_ai.
+### Project Overview
+
+This project targets job seekers aiming to enhance their interview skills through a behavioral mock interview application, powered by artificial intelligence. Leveraging the Deepgram API, the app identifies and timestamps filler words, enabling it to pinpoint pauses in speech. Additionally, it utilizes the Google Gemini API to assess the user's recorded responses, preceded by a prompt, offering constructive feedback on their performance. Users are presented with interview questions, and the app evaluates their verbal responses. The application assigns a performance score based on the comprehensive analysis of speech patterns, filler words, and pauses. The backend of this application is developed using Flask, while the frontend is crafted with Next.js.
 
 # Table of Contents
 
-1. [Project Overview](#mockai)
-2. [Quick Start for Dev Team](#quick-start-for-dev-team)
-3. [Project Directory](#project-directory-anchor)
-4. [Quick Start](#quick-start)
+1. [Project Overview](#project-overview)
+2. [Project Directory](#project-directory-anchor)
+3. [Quick Start](#quick-start)
    - [Clone and Install](#clone-and-install)
    - [Environment Variables](#environment-variables)
+   - [Configuring Auth0](#configuring-auth0)
    - [Start Virtual Environment](#start-virtual-environment)
    - [Running the Flask API](#running-the-flask-api)
    - [Running Concurrently](#running-concurrently)
@@ -35,6 +35,7 @@ This README will be updated throughout the development process. The following is
 │   │   ├── tmp
 │   │   ├── audio_analysis.py
 │   │   ├── database.py
+│   │   ├── genai_utils.py
 │   │   ├── sample-data
 │   ├── app
 │   │   ├── api
@@ -44,6 +45,9 @@ This README will be updated throughout the development process. The following is
 │   │   ├── layout.tsx
 │   │   ├── page.tsx
 │   ├── components
+│   ├── hooks
+│   ├── types
+│   ├── .env.local
 │   ├── next-env.d.ts
 │   ├── next.config.mjs
 │   ├── package-lock.json
@@ -98,13 +102,36 @@ To set up the necessary environment variables:
 2. Locate the `.env.example` file. This file contains a template of the environment variables required by the project.
 3. Create a new file named `.env` in the same directory.
 4. Copy the contents of `.env.example` into your `.env` file.
-5. Replace `your_api_key_here` with your actual API key value.
+5. Replace the placeholder values with your own API keys.
+6. Enter a prompt to be used for the AI analysis. This can be any text you choose.
+
 
 ```bash
-DG_API_KEY=your_api_key_here
+DG_API_KEY="your_deepgram_api_key_here"
+GOOGLE_API_KEY="YOUR_GEMINI_API_KEY_HERE"
+PROMPT_TO_AI="YOUR_PROMPT_HERE"
 ```
 
-Get your free API key from [Deepgram](https://www.deepgram.com/).
+Get your free API keys for [Deepgram](https://www.deepgram.com/) ,and [Gemini API Key](https://aistudio.google.com/app/apikey).
+
+---
+
+### Configuring Auth0
+Refer to the [Auth0 documentation](https://auth0.com/docs/quickstart/webapp/nextjs) to set up your Auth0 account and configure the necessary settings.
+
+> 💡 **Tip:** If you click login under the 'Configure The SDK' section, the values will be populated for you.
+
+![Auth0 Configuration](./mock_ai/public/auth0Config.png)
+
+In the root directory of the project, create a `.env.local` file and add the following environment variables:
+
+```bash
+AUTH0_SECRET='use [openssl rand -hex 32] to generate a 32 bytes value'
+AUTH0_BASE_URL='http://localhost:3000'
+AUTH0_ISSUER_BASE_URL='https://{yourDomain}'
+AUTH0_CLIENT_ID='{yourClientId}'
+AUTH0_CLIENT_SECRET='{yourClientSecret}'
+```
 
 ### Start Virtual Environment
 

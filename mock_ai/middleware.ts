@@ -6,11 +6,13 @@ export async function middleware(req: NextRequest) {
 
   try {
     const { user } = (await getSession(req, res)) || {};
+    const URL = process.env.NEXT_PUBLIC_VERCEL_URL
 
     if (user) {
       const response = await fetch(
-        "http://localhost:3001/service/add_user",
-
+        process.env.NEXT_PUBLIC_VERCEL_URL
+        ? "http://localhost:3001/service/add_user"
+        : "/service/add_user",
         {
           method: "POST",
           headers: {
@@ -34,7 +36,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   } catch (error) {
     console.error("Error in middleware:", error);
-    return NextResponse.error(500, "Error from middleware");
+    return NextResponse.error();
   }
 }
 

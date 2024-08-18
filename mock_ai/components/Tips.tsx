@@ -1,4 +1,4 @@
-export default function Tips() {
+export default function Tips () {
   return (
     <div className="relative min-h-screen bg-[#fdf4ff] text-gray-800 p-8 pt-20">
       <section className="mt-20">
@@ -16,7 +16,7 @@ export default function Tips() {
               Stay Positive
             </h3>
             <p>
-              Positivity can significantly impact your interview's
+              Positivity can significantly impact your interviews
               outcome. Remember to smile and maintain a positive
               demeanor.
             </p>
