@@ -1,15 +1,12 @@
 {
   "builds": [
     {
-      "src": "next.config.js",
+      "src": "next.config.mjs",
       "use": "@vercel/next"
     },
     {
-      "src": "api/**/*.py",
-      "use": "@vercel/python",
-      "config": {
-        "excludeFiles": "public/**"
-      }
+      "src": "api/index.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
