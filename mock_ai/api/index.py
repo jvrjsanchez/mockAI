@@ -3,7 +3,6 @@ from flask import request, jsonify
 import os
 import json
 import logging
-from deepgram import DeepgramClient, PrerecordedOptions, FileSource
 from flask_cors import CORS
 from dotenv import load_dotenv
 from api.audio_analysis import analyze_audio
@@ -60,6 +59,7 @@ def upload_audio():
         f.write(audio_buffer)
 
     try:
+        from deepgram import DeepgramClient, PrerecordedOptions, FileSource
         # STEP 1 Create a Deepgram client using the API key
         deepgram = DeepgramClient(API_KEY)
 
