@@ -3,3 +3,8 @@ node_modules/
 *.log
 *.md
 tests/
+
+sample-data/*
+venv/
+__pycache__/
+*.pyc
