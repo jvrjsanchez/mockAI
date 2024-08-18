@@ -1,10 +1,17 @@
 {
-  "functions": {
-    "api/**/*.py": {
-      "runtime": "python3.9",
-      "excludeFiles": "public/**"
+  "builds": [
+    {
+      "src": "next.config.js",
+      "use": "@vercel/next"
+    },
+    {
+      "src": "api/**/*.py",
+      "use": "@vercel/python",
+      "config": {
+        "excludeFiles": "public/**"
+      }
     }
-  },
+  ],
   "routes": [
     {
       "src": "/api/(.*)",
@@ -13,12 +20,6 @@
     {
       "src": "/(.*)",
       "dest": "/$1"
-    }
-  ],
-  "builds": [
-    {
-      "src": "next.config.js",
-      "use": "@vercel/next"
     }
   ]
 }
