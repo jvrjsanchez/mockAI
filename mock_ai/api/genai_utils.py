@@ -5,6 +5,9 @@ from flask import send_from_directory
 from api import app
 
 
+# Gemini configuration
+#  https://cloud.google.com/generative-ai/docs/gemini/quickstart
+
 PROMPT_TO_AI = os.getenv("PROMPT_TO_AI")
 
 

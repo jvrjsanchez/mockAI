@@ -1,4 +1,3 @@
-# index.py
 
 from flask import request, jsonify
 import os
@@ -10,7 +9,6 @@ from dotenv import load_dotenv
 from api.audio_analysis import analyze_audio
 from api.database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript
 from api.genai_utils import prompt_with_audio_file, extract_analysis_results
-import google.generativeai as genai
 from datetime import datetime
 
 from . import app
@@ -29,11 +27,6 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 PROMPT_TO_AI_INTERVIEWER = os.getenv("PROMPT_TO_AI_INTERVIEWER")
 PROMPT_TO_AI = os.getenv("PROMPT_TO_AI")
 
-# Gemini configuration
-#  https://cloud.google.com/generative-ai/docs/gemini/quickstart
-genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel(
-    'gemini-1.5-pro', generation_config={"response_mime_type": "application/json"})
 
 audio_file_path = os.path.join(os.path.dirname(
     os.path.dirname(__file__)), 'audio.wav')
@@ -103,7 +96,7 @@ def upload_audio():
 
         # Generate score and feedback using Google Gemini
         gemini_response = prompt_with_audio_file(
-            PROMPT_TO_AI, audio_file_path, genai)
+            audio_file_path, question)
         feedback = gemini_response.text
         # Assuming score is part of the response metadata
         score = gemini_response.metadata.get('score', 0)
