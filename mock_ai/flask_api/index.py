@@ -6,16 +6,20 @@ import json
 import logging
 from deepgram import DeepgramClient, PrerecordedOptions, FileSource  # type: ignore
 from flask_cors import CORS
-from dotenv import load_dotenv  # type: ignore
-from audio_analysis import analyze_audio
-from database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript, update_feedback
+from dotenv import load_dotenv
+from flask_api.audio_analysis import analyze_audio
+from flask_api.database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript, update_feedback
 import sqlite3
-from genai_utils import prompt_with_audio_file, extract_analysis_results
+from flask_api.genai_utils import prompt_with_audio_file, extract_analysis_results
 import google.generativeai as genai
 from datetime import datetime
 
-app = Flask(__name__)
+from . import app
+
+
 CORS(app)
+
+logging.basicConfig(level=logging.ERROR)
 
 load_dotenv()
 
@@ -37,6 +41,7 @@ audio_file_path = os.path.join(os.path.dirname(
 
 # Initialize the database
 init_db()
+
 
 @app.route('/service/upload_audio', methods=['POST'])
 def upload_audio():
@@ -101,7 +106,8 @@ def upload_audio():
         gemini_response = prompt_with_audio_file(
             PROMPT_TO_AI, audio_file_path, genai)
         feedback = gemini_response.text
-        score = gemini_response.metadata.get('score', 0)  # Assuming score is part of the response metadata
+        # Assuming score is part of the response metadata
+        score = gemini_response.metadata.get('score', 0)
 
         interview_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -282,17 +288,18 @@ def generate_ai_response():
     except Exception as e:
         print(f"An error occurred: {e}")
         return jsonify({"error": str(e)}), 500
-    
+
+
 @app.route('/service/generate_interview_question', methods=['GET'])
 def generate_interview_question():
     try:
         prompt = "You are an interviewer for a website called 'mockAI'. Ask a behavioral question to the interviewee. The goal of this question is to understand how the interviewee handles a situation. Ask the interviewee to answer the question within 3 minutes. Address them by their name if you understood it. "
         if not prompt:
             raise ValueError("Prompt not provided")
-        
+
         logging.debug(f"Prompt: {prompt}")
         gemini_response = model.generate_content(prompt)
-        
+
         if gemini_response and gemini_response.text:
             question = gemini_response.text
             add_question(question)
@@ -306,5 +313,4 @@ def generate_interview_question():
 
 
 if __name__ == '__main__':
-    init_db()
-    app.run()
+    app.run(port=3001, debug=True)
