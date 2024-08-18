@@ -25,6 +25,7 @@ const Results = () => {
         })
         .then((response) => {
           setResults([response.data]);
+          console.log([response.data]);
         })
         .catch((error) => {
           console.error("Error fetching results:", error);
@@ -39,7 +40,7 @@ const Results = () => {
       axios
         .post(
           "/service/generate_ai_response",
-          { user: user.email },
+          { user: email, question: results[0].question },
           {
             headers: { "Content-Type": "application/json" },
           }
@@ -52,7 +53,7 @@ const Results = () => {
         })
         .finally(() => setAnalysisLoading(false));
     }
-  }, [email]);
+  }, [results]);
 
   const handleSaveToggle = () => {
     setSaveResults(!saveResults);
