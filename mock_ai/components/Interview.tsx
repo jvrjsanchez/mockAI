@@ -3,7 +3,6 @@ import { useUser } from "@auth0/nextjs-auth0/client";
 import VoiceRecorder from "./VoiceRecorder";
 import { useState, useEffect } from "react";
 import { fetchQuestions } from "@/app/actions";
-import axios from "axios";
 import AnalysisCard from "./AnalysisCard";
 
 export type Question = {
