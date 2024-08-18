@@ -1,12 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-<<<<<<< HEAD
-  reactStrictMode: false,
-=======
   typescript: {
     ignoreBuildErrors: true,
   },
->>>>>>> main
   rewrites: async () => {
     return [
       {
