@@ -10,7 +10,8 @@ const Interview = () => {
   const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchQuestion = async () => {
+    const fetchQuestion = async (retryCount = 0) => {
+      console.log(`fetchQuestion called ${retryCount + 1} time(s)`)
       try {
         const response = await axios.get('/service/generate_interview_question', {
           headers: { 'Content-Type': 'application/json' }
