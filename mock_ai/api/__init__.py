@@ -2,8 +2,7 @@ import os
 import logging
 from flask import Flask
 from dotenv import load_dotenv
-# comment out the following line because we do not have the migrations yet for DB.
-# from .extensions import db, migrate
+from .extensions import db, migrate
 
 
 load_dotenv()
@@ -18,10 +17,10 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['UPLOAD_FOLDER'] = '/tmp'
 
-    # migrate.init_app(app, db)
+    migrate.init_app(app, db)
 
-    # with app.app_context():
-    #     from api import models
+    with app.app_context():
+        from api import models
 
     if not app.debug:
         stream_handler = logging.StreamHandler()
