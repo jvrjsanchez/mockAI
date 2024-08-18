@@ -24,7 +24,8 @@ const Results = () => {
           headers: { 'Content-Type': 'application/json' }
         })
         .then((response) => {
-          setResults([response.data])
+          setResults([response.data]);
+          console.log([response.data]);
         })
         .catch((error) => {
           console.error('Error fetching results:', error)

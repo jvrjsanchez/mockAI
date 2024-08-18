@@ -52,6 +52,25 @@ export default function VoiceRecorder ({
     }
   }
 
+  const generateAIRespopnse = async (user: string, question: string) => {
+    try {
+      const response = await fetch('/service/generate_ai_response', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user, question }),
+      });
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      setFeedback(data.response);
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+    }
+  };
+
   const handleToggleRecording = async () => {
     if (!isRecording) {
       startRecording()

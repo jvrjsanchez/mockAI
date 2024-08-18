@@ -1,14 +1,12 @@
-# index.py
-
 from flask import Flask, request, jsonify
 import os
 import json
 import logging
-from deepgram import DeepgramClient, PrerecordedOptions, FileSource  # type: ignore
+from deepgram import DeepgramClient, PrerecordedOptions, FileSource
 from flask_cors import CORS
-from dotenv import load_dotenv  # type: ignore
+from dotenv import load_dotenv
 from audio_analysis import analyze_audio
-from database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript, update_feedback
+from database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, get_last_transcript, save_transcript, update_feedback
 import sqlite3
 from genai_utils import prompt_with_audio_file, extract_analysis_results
 import google.generativeai as genai
@@ -19,23 +17,16 @@ CORS(app)
 
 load_dotenv()
 
-# NOTE did you forget to add your API keys to the .env file?
-#      - path: mock_ai/api/.env
 API_KEY = os.getenv("DG_API_KEY")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 PROMPT_TO_AI_INTERVIEWER = os.getenv("PROMPT_TO_AI_INTERVIEWER")
 PROMPT_TO_AI = os.getenv("PROMPT_TO_AI")
 
-# Gemini configuration
-#  https://cloud.google.com/generative-ai/docs/gemini/quickstart
 genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel(
-    'gemini-1.5-pro', generation_config={"response_mime_type": "application/json"})
+model = genai.GenerativeModel('gemini-1.5-pro', generation_config={"response_mime_type": "application/json"})
 
-audio_file_path = os.path.join(os.path.dirname(
-    os.path.dirname(__file__)), 'audio.wav')
+audio_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'audio.wav')
 
-# Initialize the database
 init_db()
 
 @app.route('/service/upload_audio', methods=['POST'])
@@ -47,23 +38,14 @@ def upload_audio():
 
     user = request.form.get('user')
     question = request.form.get('question')
-    questionId = None
-
-    # The question comes in as a string with the question id in the question. The id is actually the questions primary key, so we need to extract it.
-    if question and question[:1].isdigit():
-        questionId = int(question[:1])
-    else:
-        return jsonify({"error": "Invalid question id"}), 400
 
     audio_file = request.files['audio']
     audio_buffer = audio_file.read()
 
-    # save the audio file
     with open('./audio.wav', 'wb') as f:
         f.write(audio_buffer)
 
     try:
-        # STEP 1 Create a Deepgram client using the API key
         deepgram = DeepgramClient(API_KEY)
 
         with open('./audio.wav', "rb") as file:
@@ -73,7 +55,6 @@ def upload_audio():
             "buffer": buffer_data,
         }
 
-        # STEP 2: Configure Deepgram options for audio analysis
         options = PrerecordedOptions(
             model="nova-2",
             smart_format=True,
@@ -83,30 +64,23 @@ def upload_audio():
             utt_split=10000
         )
 
-        # STEP 3: Call the transcribe_file method with the audio payload and options
+        response = deepgram.listen.prerecorded.v("1").transcribe_file(payload, options)
 
-        response = deepgram.listen.prerecorded.v(
-            "1").transcribe_file(payload, options)
-
-        # save the transcript to the feedback table and enter the users email.
         userId = get_user_by_email(user)
 
         analysis_results = analyze_audio(response)
 
-        # Access the results from the dictionary from analyze_audio using helper.
-        long_pauses, pause_durations, transcript, filler_word_count_json = extract_analysis_results(
-            analysis_results)
+        long_pauses, pause_durations, transcript, filler_word_count_json = extract_analysis_results(analysis_results)
 
-        # Generate score and feedback using Google Gemini
-        gemini_response = prompt_with_audio_file(
-            PROMPT_TO_AI, audio_file_path, genai)
+        prompt = f"You are an interview feedback analysis for a website called 'MockAI'. Please assess a interviewee's answer to the following: {question}.Give them a score from a scale of 60 to 100. Thank them for their answer, and sign your name as 'MockAI'. DO NOT include any markdown in your response. Encourage them to keep coming back to MockAI to practice their interviewing skills. Address them by their name if you understood it."
+        gemini_response = prompt_with_audio_file(prompt, audio_file_path, genai)
         feedback = gemini_response.text
-        score = gemini_response.metadata.get('score', 0)  # Assuming score is part of the response metadata
+        score = gemini_response.metadata.get('score', 0)
+        print(f"Score: {score}")
 
         interview_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        save_transcript(userId, transcript, questionId, question[2:],
-                        filler_word_count_json, long_pauses, 0 if len(pause_durations) == 0 else json.dumps(pause_durations), score, feedback, interview_date)
+        save_transcript(userId, transcript, question, filler_word_count_json, long_pauses, 0 if len(pause_durations) == 0 else json.dumps(pause_durations), score, feedback, interview_date)
 
         return jsonify({
             "transcript": transcript,
@@ -136,7 +110,6 @@ def add_email_route():
     if not email:
         return jsonify({"error": "Email is required"}), 400
 
-    # if the user already exists in sqlite3, skip to the next step
     user_id = add_user(email, email)
 
     if user_id is None:
@@ -155,6 +128,7 @@ def get_emails_route():
 def add_question_route():
     data = request.get_json()
     question = data.get('question')
+    print(question)
 
     if not question:
         return jsonify({"error": "Question is required"}), 400
@@ -181,18 +155,19 @@ def save_results():
 
     if not user or not results:
         return jsonify({"error": "User and results are required"}), 400
-
-    # Save results in the database
+    
+    # Save results to database
     try:
         with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
             for result in results:
                 cursor.execute('''
-                   UPDATE results
-                   SET question = ?, score = ?,  long_pauses = ?, 
-                   filler_words = ?, pause_durations = ?
-                   where id = ?
-                ''', (result['question'], result['score'], result['long_pauses'], result['filler_words'], result['pause_durations'], result['id']))
+                    UPDATE results
+                    SET question = ?, score = ?, transcript = ?,
+                    filler_words = ?, long_pauses = ?, pause_durations = ?,
+                    feedback = ?, interview_date = ?
+                    where id = ?
+                ''', (result['question'], result['score'], result['transcript'], result['filler_words'], result['long_pauses'], result['pause_durations'], result['feedback'], result['interview_date'], result['id']))
             conn.commit()
             return jsonify({"message": "Results saved successfully"})
     except Exception as e:
@@ -264,21 +239,35 @@ def generate_ai_response():
         data = request.get_json()
         user = data.get('user')
         userId = get_user_by_email(user)
+        question= data.get('question')
+        logging.debug(data)
 
-        # Get the last transcript saved for the user
-        # NOTE Not used as we pass the audio to the AI model. We can use this if we have problems saving audio in deployment.
-        # transcript = get_last_transcript(userId)
-        # print("transcript from db [not in use]: ", transcript)
+        if not question:
+            raise ValueError("Question not provided")
+        
+        prompt = f"You are an interview feedback analysis for a website called 'MockAI'. Please assess a interviewee's answer to the following: {question}.Give them a score from a scale of 60 to 100. Thank them for their answer, and sign your name as 'MockAI'. DO NOT include any markdown in your response. Encourage them to keep coming back to MockAI to practice their interviewing skills. Address them by their name if you understood it."
+
+        # Logged prompt for debugging
+        logging.debug(f"Prompt: {prompt}")
 
         gemini_response = prompt_with_audio_file(
-            PROMPT_TO_AI, audio_file_path, genai)
+            prompt, './audio.wav', genai)
+        if gemini_response is None:
+            raise ValueError("No response from Gemini")
+        
+        feedback = gemini_response.text
+        print(f"Feedback: {gemini_response}")
+        score = 0
+        '''gemini_response.metadata.get('score', 0) if gemini_response.metadata else 0'''
 
-        if gemini_response and gemini_response.text and user:
-            update_feedback(userId, gemini_response.text)
+        logging.debug(f"Response from Gemini: {gemini_response.text}, Score: {score}")
+
+        if gemini_response and feedback and user:
+            update_feedback(userId, feedback)
         else:
             print("No response from Gemini and user not provided.")
 
-        return jsonify({"response": gemini_response.text})
+        return jsonify({"response": feedback})
     except Exception as e:
         print(f"An error occurred: {e}")
         return jsonify({"error": str(e)}), 500
@@ -286,9 +275,7 @@ def generate_ai_response():
 @app.route('/service/generate_interview_question', methods=['GET'])
 def generate_interview_question():
     try:
-        prompt = "You are an interviewer for a website called 'mockAI'. Ask a behavioral question to the interviewee. The goal of this question is to understand how the interviewee handles a situation. Ask the interviewee to answer the question within 3 minutes. Address them by their name if you understood it. "
-        if not prompt:
-            raise ValueError("Prompt not provided")
+        prompt = "You are an interviewer for a website called 'mockAI'. Ask a question to the interviewee that are common towards interviewing for a company. Use as many diverse questions as possible. Be sure to recommend the interviewee answer the question within 3 minutes. Address them by their name if you understood it. "
         
         logging.debug(f"Prompt: {prompt}")
         gemini_response = model.generate_content(prompt)

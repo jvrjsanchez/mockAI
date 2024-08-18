@@ -112,7 +112,7 @@ def get_user_by_email(email):
         return None
 
 
-def save_transcript(user_id, transcript, question_id, question, filler_word_count, long_pauses, pause_durations, score, feedback, interview_date):
+def save_transcript(user_id, transcript, question, question_id, filler_word_count, long_pauses, pause_durations, score, feedback, interview_date):
     try:
         with sqlite3.connect('MockAI.db') as conn:
             cursor = conn.cursor()
