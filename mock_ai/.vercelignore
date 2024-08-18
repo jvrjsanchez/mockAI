@@ -1,0 +1,5 @@
+# Ignore unnecessary files and directories
+node_modules/
+*.log
+*.md
+tests/

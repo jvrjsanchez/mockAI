@@ -28,7 +28,6 @@ yarn-error.log*
 # local env files
 .env*.local
 
-
 # vercel
 .vercel
 
@@ -36,9 +35,21 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# python
-flask_api/__pycache__/
-flask_api/*.pyc
-myenv/
-venv/
-flask_api/.env
+
+.vercel
+*.log
+*.pyc
+__pycache__
+
+# Environments 
+.env 
+.venv 
+env/ 
+venv/ 
+ENV/ 
+env.bak/ 
+venv.bak/ 
+
+# Alembic
+alembic/versions/__pycache__/
+alembic/versions/*.pyc
