@@ -1,4 +1,4 @@
-import { Interview } from "@/components/Interview";
+import { Interview } from "@/components";
 
 export default function interview() {
   return (
