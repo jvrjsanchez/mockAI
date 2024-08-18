@@ -1,45 +1,77 @@
-'use client'
-import { useEffect, useState } from 'react'
-import axios from 'axios'
+import React from "react";
+import { Question } from "@/types";
 
-const Questions = ({ onSelectQuestion }: { onSelectQuestion: (question: string) => void }) => {
-  const [questions, setQuestions] = useState<string[]>([])
-  const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const response = await axios.get('/service/get_questions')
-        setQuestions(response.data)
-      } catch (error) {
-        console.error('Error fetching questions:', error)
-      }
-    }
-
-    fetchQuestions()
-  }, [])
-
-  const handleQuestionClick = (question: string) => {
-    setSelectedQuestion(question)
-    onSelectQuestion(question)
-  }
-
-  return (
-    <div className="w-1/2 p-4 border-r border-gray-300">
-      <h2 className="text-xl font-bold mb-4">Choose an Interview Question</h2>
-      <ul>
-        {questions.map((question, index) => (
-          <li
-            key={index}
-            className={`cursor-pointer p-2 ${selectedQuestion === question ? 'bg-gray-200' : ''}`}
-            onClick={() => handleQuestionClick(question)}
-          >
-            {question.slice(1)} {/* Remove leading number from question that user sees */}
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
+interface QuestionsProps {
+  questions: Question[];
+  selectedQuestion: Question | null;
+  onSelectQuestion: (question: Question) => void;
+  setNotification: (notification: string | null) => void;
 }
 
-export default Questions
+export function Questions({
+  questions,
+  selectedQuestion,
+  onSelectQuestion,
+  setNotification,
+}: QuestionsProps) {
+  function handleQuestionClick(q: Question) {
+    console.log("Selected question:", q);
+
+    onSelectQuestion(q);
+    setNotification(null);
+  }
+  console.log("Questions:", questions);
+  return (
+    <div className="divide-y divide-muted">
+      {questions.map((q) => (
+        <div
+          key={q.id}
+          className={`px-6 py-4 hover:bg-muted cursor-pointer ${
+            selectedQuestion === q
+              ? "bg-blue-100 border-l-4 border-blue-500"
+              : ""
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div onClick={() => handleQuestionClick(q)}>
+              <h3 className="text-base font-medium">{q.question}</h3>
+            </div>
+            <button className="text-primary">
+              <PlayIcon
+                selected={selectedQuestion === q}
+                className={
+                  selectedQuestion === q
+                    ? "h-5 w-5 text-blue-500 animate-pulse"
+                    : "h-5 w-5"
+                }
+              />
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+interface PlayIconProps extends React.SVGProps<SVGSVGElement> {
+  selected: boolean;
+}
+
+function PlayIcon({ selected, ...props }: PlayIconProps) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill={selected ? "accent" : "none"}
+      stroke={selected ? "blue" : "currentColor"}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polygon points="6 3 20 12 6 21 6 3" />
+    </svg>
+  );
+}

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import useUploadAudio from "@/hooks/useUpload";
+import FillerCount from "./FillerCount";
 import { Feedback } from "@/types";
 
 interface VoiceRecorderProps {
@@ -26,7 +27,7 @@ export default function VoiceRecorder({
     audioBlob,
   } = useVoiceRecorder()!;
 
-  const { isLoading } = useUploadAudio();
+  const { isLoading, error } = useUploadAudio();
 
   const handleUpload = async (audioBlob: Blob) => {
     const formData = new FormData();
@@ -34,16 +35,14 @@ export default function VoiceRecorder({
     formData.append("user", user.email);
     formData.append("question", selectedQuestion);
 
-    const url =
-      process.env.NODE_ENV === "development"
-        ? "http://localhost:3001/service/upload_audio"
-        : "/service/upload_audio";
-
     try {
-      const response = await fetch(url, {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "http://localhost:3001/service/upload_audio",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
       const data = await response.json();
       setFeedback(data);
       setShowFeedback(true);
@@ -65,18 +64,18 @@ export default function VoiceRecorder({
   useEffect(() => {
     if (recordingComplete && audioBlob) {
       // reset feedback
-      console.log(feedback);
-      console.log(showFeedback);
       setFeedback(null);
       handleUpload(audioBlob);
     }
   }, [recordingComplete, audioBlob]);
 
+  console.log(selectedQuestion);
+
   return (
-    <div className="flex items-center justify-center h-screen w-full sm:w-auto">
+    <div className="flex items-center justify-center h-screen w-full">
       <div className="w-full">
         {(isRecording || transcript) && (
-          <div className="w-full sm:w-1/3 m-auto rounded-md border p-4 bg-white">
+          <div className="w-1/4 m-auto rounded-md border p-4 bg-white">
             <div className="flex-1 flex w-full justify-between">
               <div className="space-y-1">
                 <p className="text-sm font-medium leading-none">
@@ -84,7 +83,7 @@ export default function VoiceRecorder({
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {isRecording
-                    ? "What are your thoughts on this question?"
+                    ? "What are your thoughts on this question?...."
                     : "Thank you for your interview."}
                 </p>
               </div>
@@ -94,7 +93,7 @@ export default function VoiceRecorder({
             </div>
 
             {transcript && (
-              <div className="border rounded-md p-2 h-full mt-4">
+              <div className="border rounded-md p-2 h-full  mt-4">
                 <p className="mb-0">{transcript}</p>
               </div>
             )}
@@ -141,6 +140,7 @@ export default function VoiceRecorder({
             </button>
           )}
 
+          {/* Render the filler word count */}
           {isLoading && (
             <div className="flex items-center mt-6 space-x-2">
               <svg
@@ -165,6 +165,9 @@ export default function VoiceRecorder({
               </svg>
               <span className="text-gray-600">Uploading...</span>
             </div>
+          )}
+          {feedback && showFeedback && (
+            <FillerCount feedback={feedback} />
           )}
         </div>
       </div>
