@@ -7,10 +7,10 @@ import logging
 from deepgram import DeepgramClient, PrerecordedOptions, FileSource  # type: ignore
 from flask_cors import CORS
 from dotenv import load_dotenv
-from flask_api.audio_analysis import analyze_audio
-from flask_api.database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript, update_feedback
+from api.audio_analysis import analyze_audio
+from api.database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript, update_feedback
 import sqlite3
-from flask_api.genai_utils import prompt_with_audio_file, extract_analysis_results
+from api.genai_utils import prompt_with_audio_file, extract_analysis_results
 import google.generativeai as genai
 from datetime import datetime
 
