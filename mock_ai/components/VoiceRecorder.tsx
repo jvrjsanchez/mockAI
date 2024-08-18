@@ -41,18 +41,10 @@ export default function VoiceRecorder ({
           method: 'POST',
           body: formData
         }
-<<<<<<< HEAD
-      );
-      const data = await response.json();
-      setFeedback(data);
-      generateAIRespopnse(user.email, selectedQuestion);
-      setShowFeedback(true);
-=======
       )
       const data = await response.json()
       setFeedback(data)
       setShowFeedback(true)
->>>>>>> main
     } catch (error) {
       console.error('Error uploading audio file:', error)
       setFeedback(null)
