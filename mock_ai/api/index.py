@@ -1,15 +1,14 @@
 # index.py
 
-from flask import Flask, request, jsonify
+from flask import request, jsonify
 import os
 import json
 import logging
-from deepgram import DeepgramClient, PrerecordedOptions, FileSource  # type: ignore
+from deepgram import DeepgramClient, PrerecordedOptions, FileSource
 from flask_cors import CORS
 from dotenv import load_dotenv
 from api.audio_analysis import analyze_audio
 from api.database import init_db, add_user, get_all_users, add_question, get_all_questions, get_user_by_email, save_transcript
-import sqlite3
 from api.genai_utils import prompt_with_audio_file, extract_analysis_results
 import google.generativeai as genai
 from datetime import datetime
@@ -177,139 +176,6 @@ def add_question_route():
 def get_questions_route():
     questions = get_all_questions()
     return jsonify(questions)
-
-
-@app.route('/service/save_results', methods=['POST'])
-def save_results():
-    data = request.get_json()
-    user = data.get('user')
-    results = data.get('results')
-
-    if not user or not results:
-        return jsonify({"error": "User and results are required"}), 400
-
-    # Save results in the database
-    try:
-        with sqlite3.connect('MockAI.db') as conn:
-            cursor = conn.cursor()
-            for result in results:
-                cursor.execute('''
-                   UPDATE results
-                   SET question = ?, score = ?,  long_pauses = ?, 
-                   filler_words = ?, pause_durations = ?
-                   where id = ?
-                ''', (result['question'], result['score'], result['long_pauses'], result['filler_words'], result['pause_durations'], result['id']))
-            conn.commit()
-            return jsonify({"message": "Results saved successfully"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/service/get_results', methods=['GET'])
-def get_results():
-    try:
-        user = request.args.get('user').strip()
-        user = str(user)
-        userId = get_user_by_email(user)
-
-        with sqlite3.connect('MockAI.db') as conn:
-            cursor = conn.cursor()
-            results = cursor.execute('''
-                SELECT * FROM results WHERE user_id = ? ORDER BY id DESC LIMIT 1
-            ''', (userId,)).fetchone()
-            return jsonify({
-                'id': results[0],
-                'user': results[1],
-                'question': results[3],
-                'score': results[4],
-                'transcript': results[5],
-                'filler_words': results[6],
-                'long_pauses': results[7],
-                'pause_durations': results[8],
-                'ai_feedback': '' if not results[9] else results[9],
-                'interview_date': results[10],
-            })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-# @app.route('/service/get_all_results', methods=['GET'])
-# def get_all_results():
-#     try:
-#         user = request.args.get('user').strip()
-#         user = str(user)
-#         userId = get_user_by_email(user)
-
-#         with sqlite3.connect('MockAI.db') as conn:
-#             cursor = conn.cursor()
-#             results = cursor.execute('''
-#                 SELECT * FROM results WHERE user_id = ? ORDER BY id DESC
-#             ''', (userId,)).fetchall()
-#             return jsonify([
-#                 {
-#                     'id': result[0],
-#                     'user': result[1],
-#                     'question': result[3],
-#                     'score': result[4],
-#                     'transcript': result[5],
-#                     'filler_words': result[6],
-#                     'long_pauses': result[7],
-#                     'pause_durations': result[8],
-#                     'ai_feedback': '' if not result[9] else result[9],
-#                     'interview_date': result[10],
-#                 }
-#                 for result in results
-#             ])
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
-
-# @app.route('/service/generate_ai_response', methods=['POST', 'GET'])
-# def generate_ai_response():
-#     try:
-#         data = request.get_json()
-#         user = data.get('user')
-#         userId = get_user_by_email(user)
-
-#         # Get the last transcript saved for the user
-#         # NOTE Not used as we pass the audio to the AI model. We can use this if we have problems saving audio in deployment.
-#         # transcript = get_last_transcript(userId)
-#         # print("transcript from db [not in use]: ", transcript)
-
-#         gemini_response = prompt_with_audio_file(
-#             PROMPT_TO_AI, audio_file_path, genai)
-
-#         if gemini_response and gemini_response.text and user:
-#             update_feedback(userId, gemini_response.text)
-#         else:
-#             print("No response from Gemini and user not provided.")
-
-#         return jsonify({"response": gemini_response.text})
-#     except Exception as e:
-#         print(f"An error occurred: {e}")
-#         return jsonify({"error": str(e)}), 500
-
-
-@app.route('/service/generate_interview_question', methods=['GET'])
-def generate_interview_question():
-    try:
-        prompt = "You are an interviewer for a website called 'mockAI'. Ask a behavioral question to the interviewee. The goal of this question is to understand how the interviewee handles a situation. Ask the interviewee to answer the question within 3 minutes. Address them by their name if you understood it. "
-        if not prompt:
-            raise ValueError("Prompt not provided")
-
-        logging.debug(f"Prompt: {prompt}")
-        gemini_response = model.generate_content(prompt)
-
-        if gemini_response and gemini_response.text:
-            question = gemini_response.text
-            add_question(question)
-            return question
-        else:
-            print("No response from Gemini and user not provided.")
-            return jsonify({"error": "No response from Gemini"}), 500
-    except Exception as e:
-        logging.error(f"Exception: {e}")
-        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
