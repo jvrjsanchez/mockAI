@@ -65,7 +65,6 @@ export default function VoiceRecorder ({
       // reset feedback
       console.log(feedback)
       console.log(showFeedback)
-      console.log("hello world")
       setFeedback(null)
       handleUpload(audioBlob)
     }
