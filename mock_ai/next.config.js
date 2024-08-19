@@ -4,11 +4,6 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   outputFileTracing: true,
-  outputFileTracingIncludes: [
-    "**/*.py",
-    "**/api/**/*.py",
-    "**/static/**/*",
-  ],
 
   rewrites: async () => {
     return [
