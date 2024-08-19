@@ -3,5 +3,20 @@
     "api/**": {
       "excludeFiles": "{.next,*.cache,node_modules,public,app}/**"
     }
-  }
+  },
+
+  "routes": [
+    {
+      "src": "/authService/(.*)",
+      "dest": "/service/auth/[auth].ts"
+    },
+    {
+      "src": "/service/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
 }
