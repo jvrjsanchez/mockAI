@@ -77,7 +77,7 @@ const Header = () => {
                   <li onClick={closeAccordion}>
                     <a
                       title="Sign In"
-                      href="/authService/auth/login"
+                      href="/api/auth/login"
                       className="block px-4 py-2"
                     >
                       Sign In

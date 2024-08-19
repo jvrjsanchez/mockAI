@@ -51,7 +51,7 @@ const UserAccount = () => {
             Sorry, but you must be signed in to view your account.
           </p>
           <button className="bg-primary-blue text-white mt-10 rounded-full">
-            <a href="/authService/auth/login">
+            <a href="/api/auth/login">
               Sign In to Start Your Interview
             </a>
           </button>
@@ -143,7 +143,7 @@ const UserAccount = () => {
                 Start Your Interview
               </Link>
               <a
-                href="/authService/auth/logout"
+                href="/api/auth/logout"
                 className="bg-primary-blue text-white rounded-full py-2 text-center"
               >
                 Sign Out

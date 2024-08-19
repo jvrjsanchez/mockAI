@@ -32,7 +32,7 @@ const Template = () => {
           </a>
         ) : (
           <a
-            href="/authService/auth/login"
+            href="/api/auth/login"
             title="Start Your Interview"
             className="bg-primary-blue text-white mt-10 rounded-full"
           >

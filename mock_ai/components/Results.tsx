@@ -76,7 +76,7 @@ const Results = () => {
   };
 
   const handleSignOut = () => {
-    window.location.href = "/authService/auth/logout";
+    window.location.href = "/api/auth/logout";
   };
 
   if (!user) {
@@ -90,7 +90,7 @@ const Results = () => {
             Sorry, but you must be signed in to review your results.
           </p>
           <button className="bg-primary-blue text-white mt-10 rounded-full">
-            <a href="/authService/auth/login">
+            <a href="/api/auth/login">
               Sign In to Review Your Results
             </a>
           </button>

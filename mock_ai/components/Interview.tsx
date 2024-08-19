@@ -57,7 +57,7 @@ const Interview = () => {
             Sorry, but you must be signed in to start your interview.
           </p>
           <button className="bg-primary-blue text-white mt-10 rounded-full">
-            <a href="/authService/auth/login">
+            <a href="/api/auth/login">
               Sign In to Start Your Interview
             </a>
           </button>
