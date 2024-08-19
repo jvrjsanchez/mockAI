@@ -35,14 +35,15 @@ export default function VoiceRecorder({
     formData.append("user", user.email);
     formData.append("question", selectedQuestion);
 
+    const URL = process.env.NEXT_PUBLIC_API_BASE_URL
+      ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/service/upload_audio`
+      : "http://localhost:3001/service/upload_audio";
+
     try {
-      const response = await fetch(
-        "http://localhost:3001/service/upload_audio",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch(URL, {
+        method: "POST",
+        body: formData,
+      });
       const data = await response.json();
       setFeedback(data);
       setShowFeedback(true);
