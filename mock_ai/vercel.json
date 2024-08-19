@@ -1,4 +1,9 @@
 {
+    "functions": {
+        "api/**": {
+            "excludeFiles": "{.next,*cache,node_modules,public,app}/**"
+        }
+    },
     "builds": [
       {
         "src": "flask_api/index.py",
