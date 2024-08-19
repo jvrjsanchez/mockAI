@@ -1,11 +1,7 @@
 import os
 import logging
 from flask import Flask
-from dotenv import load_dotenv
 from .extensions import db, migrate
-
-
-load_dotenv()
 
 
 def create_app():
