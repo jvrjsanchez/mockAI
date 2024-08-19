@@ -4,24 +4,5 @@
             "excludeFiles": "{.next,*cache,node_modules,public,app}/**"
         }
     }
-    // "builds": [
-    //   {
-    //     "src": "flask_api/index.py",
-    //     "use": "@vercel/python"
-    //   },
-    //   {
-    //     "src": "next.config.js",
-    //     "use": "@vercel/next"
-    //   }
-    // ],
-    // "routes": [
-    //   {
-    //     "src": "/service/(.*)",
-    //     "dest": "/flask_api/index.py"
-    //   },
-    //   {
-    //     "src": "/(.*)",
-    //     "dest": "/$1"
-    //   }
-    // ]
+
   }
