@@ -1,8 +1,22 @@
 {
     "functions": {
-        "api/**": {
-            "excludeFiles": "{.next,*cache,node_modules,public,app}/**"
-        }
-    }
-    
+      "api/**": {
+        "excludeFiles": "{.next,*.cache,node_modules,public,app}/**"
+      }
+    },
+  
+    "routes": [
+      {
+        "src": "/api/(.*)",
+        "dest": "/api/auth/[auth0]"
+      },
+      {
+        "src": "/service/(.*)",
+        "dest": "/api/index.py"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "/$1"
+      }
+    ]
   }

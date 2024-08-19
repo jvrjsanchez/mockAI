@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useVoiceRecorder } from '@/hooks/useVoiceRecorder'
 import useUploadAudio from '@/hooks/useUpload'
+import FillerCount from './FillerCount'
 import { Feedback } from '@/types'
 
 interface VoiceRecorderProps {
@@ -33,6 +34,11 @@ export default function VoiceRecorder ({
     formData.append('audio', audioBlob)
     formData.append('user', user.email)
     formData.append('question', selectedQuestion)
+
+    const URL =
+      process.env.NODE_ENV === "production"
+        ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/service/upload_audio`
+        : "http://localhost:3001/service/upload_audio";
 
     try {
       const response = await fetch(
@@ -82,18 +88,18 @@ export default function VoiceRecorder ({
   useEffect(() => {
     if (recordingComplete && audioBlob) {
       // reset feedback
-      console.log(feedback)
-      console.log(showFeedback)
       setFeedback(null)
       handleUpload(audioBlob)
     }
   }, [recordingComplete, audioBlob])
 
+  console.log(selectedQuestion)
+
   return (
-    <div className="flex items-center justify-center h-screen w-full sm:w-auto">
+    <div className="flex items-center justify-center h-screen w-full">
       <div className="w-full">
         {(isRecording || transcript) && (
-          <div className="w-full sm:w-1/3 m-auto rounded-md border p-4 bg-white">
+          <div className="w-1/4 sm:w-1/3 m-auto rounded-md border p-4 bg-white">
             <div className="flex-1 flex w-full justify-between">
               <div className="space-y-1">
                 <p className="text-sm font-medium leading-none">
@@ -184,6 +190,9 @@ export default function VoiceRecorder ({
               </svg>
               <span className="text-gray-600">Uploading...</span>
             </div>
+          )}
+          {feedback && showFeedback && (
+            <FillerCount feedback={feedback} />
           )}
         </div>
       </div>

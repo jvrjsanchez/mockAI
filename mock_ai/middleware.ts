@@ -11,8 +11,8 @@ export async function middleware(req: NextRequest) {
     if (user) {
       const response = await fetch(
         process.env.NEXT_PUBLIC_VERCEL_URL
-        ? "http://localhost:3001/service/add_user"
-        : "/service/add_user",
+        ? "/service/add_user"
+        : "http://localhost:3001/service/add_user",
         {
           method: "POST",
           headers: {

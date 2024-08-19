@@ -9,14 +9,21 @@ const Interview = () => {
   const { user, error, isLoading } = useUser()
   const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null)
 
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   useEffect(() => {
     const fetchQuestion = async (retryCount = 0) => {
       console.log(`fetchQuestion called ${retryCount + 1} time(s)`)
       try {
-        const response = await axios.get('/service/generate_interview_question', {
-          headers: { 'Content-Type': 'application/json' }
-        })
-        setSelectedQuestion(response.data.question)
+        const response = await axios.get(
+          baseUrl
+            ? `${baseUrl}/service/generate_interview_question`
+            : "/service/generate_interview_question",
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+        setSelectedQuestion(response.data);
       } catch (error) {
         console.error('Error fetching interview question from Gemini:', error)
       }

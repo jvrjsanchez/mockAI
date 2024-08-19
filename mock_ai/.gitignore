@@ -32,6 +32,9 @@ yarn-error.log*
 
 # vercel
 .vercel
+*.log
+*.pyc
+__pycache__
 
 # typescript
 *.tsbuildinfo
@@ -44,3 +47,16 @@ myenv/
 venv/
 flask_api/.env
 api/.env
+
+# Envirnoments
+.env 
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Alembic
+alembic/versions/__pycache__/
+alembic/versions/*.pyc
