@@ -6,4 +6,4 @@ Flask-Migrate==4.0.7
 Flask-SQLAlchemy==3.1.1
 vercel_blob==0.2.5
 Werkzeug==3.0.3
-
+google-generativeai==0.7.1
