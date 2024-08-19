@@ -1,0 +1,12 @@
+# Ignore unnecessary files and directories
+node_modules/
+*.log
+*.md
+tests/
+
+sample-data/*
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+*.DS_Store
