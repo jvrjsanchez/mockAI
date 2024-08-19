@@ -42,7 +42,7 @@ export default function VoiceRecorder ({
 
     try {
       const response = await fetch(
-        'http://localhost:3001/service/upload_audio',
+        URL,
         {
           method: 'POST',
           body: formData
