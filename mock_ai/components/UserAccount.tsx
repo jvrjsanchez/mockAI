@@ -12,15 +12,18 @@ const UserAccount = () => {
 
   useEffect(() => {
     if (user) {
-      axios.get('/service/get_all_results', {
+      axios
+      .get("/service/get_all_results", {
         params: { user: user.email },
-        headers: { 'Content-Type': 'application/json' }
-      })
-        .then(response => {
-          setFeedbacks(response.data)
-          setSelectedFeedback(response.data[0])
+        headers: { "Content-Type": "application/json" },
         })
-        .catch(error => console.error('Error fetching feedbacks:', error))
+        .then((response) => {
+          setFeedbacks(response.data);
+          setSelectedFeedback(response.data[0]);
+        })
+        .catch((error) =>
+          console.error("Error fetching feedbacks:", error)
+        );
     }
   }, [user])
 
@@ -53,18 +56,46 @@ const UserAccount = () => {
     )
   } else {
     return (
-          <div className="hero">
-            <div className="flex-1 pt-36 padding-x">
-              <h1 className="text-2xl font-bold">
-                mockAI User Account Page
-              </h1>
-            </div>
-            <div className="flex-1 bg-white pt-36 padding-x rounded-lg shadow-md">
-              <>
-                <img src={user.picture} alt={user.name} className="rounded-full h-24 w-24 mx-auto" />
-                <h1 className="text-2xl font-bold text-center mt-4">{user.name}</h1>
-                <p className="text-lg text-center mt-2">{user.email}</p>
-                {feedbacks.length > 0 && (
+      <div className="hero">
+        <div className="flex-1 pt-36 padding-x">
+          <h1 className="text-2xl font-bold">
+            mockAI User Account Page
+          </h1>
+        </div>
+        <div className="flex-1 bg-white pt-36 padding-x rounded-lg shadow-md">
+          <>
+            <img
+              src={user.picture}
+              alt={user.name}
+              className="rounded-full h-24 w-24 mx-auto"
+            />
+            <h1 className="text-2xl font-bold text-center mt-4">
+              {user.name}
+            </h1>
+            <p className="text-lg text-center mt-2">{user.email}</p>
+            {feedbacks.length > 0 && (
+              <div className="mt-4">
+                <label
+                  htmlFor="feedbackSelect"
+                  className="block text-lg font-medium text-gray-700"
+                >
+                  Select Previous Feedback
+                </label>
+                <select
+                  id="feedbackSelect"
+                  name="feedback"
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                  onChange={handleFeedbackChange}
+                  value={selectedFeedback?.id || ""}
+                >
+                  {feedbacks.map((feedback) => (
+                    <option key={feedback.id} value={feedback.id}>
+                      {feedback.question} - Score: {feedback.score} -
+                      Date: {feedback.interview_date}
+                    </option>
+                  ))}
+                </select>
+                {selectedFeedback && (
                   <div className="mt-4">
                     <label htmlFor="feedbackSelect" className="block text-lg font-medium text-gray-700">
                       Select Previous Feedback
@@ -104,10 +135,12 @@ const UserAccount = () => {
                     Sign Out
                   </a>
                 </div>
-              </>
-            </div>
-          </div>
-    )
+              </div>
+            )}
+          </>          
+        </div>
+      </div>
+    );
   }
 }
 
