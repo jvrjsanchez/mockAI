@@ -1,83 +1,83 @@
-'use client'
-import React, { useEffect, useState } from 'react'
-import axios from 'axios'
-import { useUser } from '@auth0/nextjs-auth0/client'
-import AnalysisCard from './AnalysisCard'
+"use client";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useUser } from "@auth0/nextjs-auth0/client";
+import AnalysisCard from "./AnalysisCard";
 
 const Results = () => {
-  const { user } = useUser()
-  const [results, setResults] = useState<any[]>([])
-  const [saveResults, setSaveResults] = useState(false)
-  const [analysis, setAnalysis] = useState<any>(null)
-  const [analysisLoading, setAnalysisLoading] = useState(false)
-  const [email, setEmail] = useState(user?.email)
+  const { user } = useUser();
+  const [results, setResults] = useState<any[]>([]);
+  const [saveResults, setSaveResults] = useState(false);
+  const [analysis, setAnalysis] = useState<any>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [email, setEmail] = useState(user?.email);
 
   useEffect(() => {
-    setEmail(user?.email)
-  }, [user?.email])
+    setEmail(user?.email);
+  }, [user?.email]);
 
   useEffect(() => {
     if (email) {
       axios
-        .get('/service/get_results', {
+        .get("/service/get_results", {
           params: { user: user?.email },
-          headers: { 'Content-Type': 'application/json' }
+          headers: { "Content-Type": "application/json" },
         })
         .then((response) => {
-          setResults([response.data])
+          setResults([response.data]);
         })
         .catch((error) => {
-          console.error('Error fetching results:', error)
-        })
+          console.error("Error fetching results:", error);
+        });
     }
-  }, [email])
+  }, [email]);
 
   useEffect(() => {
     if (email) {
-      setAnalysisLoading(true)
+      setAnalysisLoading(true);
 
       axios
         .post(
-          '/service/generate_ai_response',
+          "/service/generate_ai_response",
           { user: user?.email },
           {
-            headers: { 'Content-Type': 'application/json' }
+            headers: { "Content-Type": "application/json" },
           }
         )
         .then((response) => {
-          setAnalysis([response.data.response])
+          setAnalysis([response.data.response]);
         })
         .catch((error) => {
-          console.error('Error fetching results:', error)
+          console.error("Error fetching results:", error);
         })
-        .finally(() => setAnalysisLoading(false))
+        .finally(() => setAnalysisLoading(false));
     }
-  }, [email])
+  }, [email]);
 
   const handleSaveToggle = () => {
-    setSaveResults(!saveResults)
-  }
+    setSaveResults(!saveResults);
+  };
 
   const handleSaveResults = () => {
     if (saveResults) {
       axios
-        .post('/service/save_results', { user: user?.email, results })
+        .post("/service/save_results", { user: user?.email, results })
         .then(() => {
-          alert('Results saved successfully.')
+          alert("Results saved successfully.");
         })
         .catch((error) => {
-          console.error('Error saving results:', error)
-        })
+          console.error("Error saving results:", error);
+        });
     }
-  }
+  };
 
   const handleStartNewInterview = () => {
-    window.location.href = '/interview'
-  }
+    window.location.href = "/interview";
+  };
 
   const handleSignOut = () => {
-    window.location.href = '/api/auth/logout'
-  }
+    window.location.href = "/authService/auth/logout";
+  };
 
   if (!user) {
     return (
@@ -90,13 +90,13 @@ const Results = () => {
             Sorry, but you must be signed in to review your results.
           </p>
           <button className="bg-primary-blue text-white mt-10 rounded-full">
-            <a href="/api/auth/login">
+            <a href="/authService/auth/login">
               Sign In to Review Your Results
             </a>
           </button>
         </div>
       </div>
-    )
+    );
   } else {
     return (
       <div className="hero">
@@ -108,12 +108,26 @@ const Results = () => {
           {results.map((result, index) => (
             <div key={index} className="result-card">
               <h2 className="text-xl font-bold">{result.question}</h2>
-              <p><strong>Score:</strong> {result.score}</p>
-              <p><strong>Transcript:</strong> {result.transcript}</p>
-              <p><strong>Filler Words:</strong> {result.filler_words}</p>
-              <p><strong>Long Pauses:</strong> {result.long_pauses}</p>
-              <p><strong>Pause Durations:</strong> {result.pause_durations}</p>
-              <p><strong>Interview Date:</strong> {result.interview_date}</p>
+              <p>
+                <strong>Score:</strong> {result.score}
+              </p>
+              <p>
+                <strong>Transcript:</strong> {result.transcript}
+              </p>
+              <p>
+                <strong>Filler Words:</strong> {result.filler_words}
+              </p>
+              <p>
+                <strong>Long Pauses:</strong> {result.long_pauses}
+              </p>
+              <p>
+                <strong>Pause Durations:</strong>{" "}
+                {result.pause_durations}
+              </p>
+              <p>
+                <strong>Interview Date:</strong>{" "}
+                {result.interview_date}
+              </p>
             </div>
           ))}
           {analysisLoading && (
@@ -158,8 +172,8 @@ const Results = () => {
           </div>
         </div>
       </div>
-    )
+    );
   }
-}
+};
 
-export default Results
+export default Results;
