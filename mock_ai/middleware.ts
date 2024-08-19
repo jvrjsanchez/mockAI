@@ -36,7 +36,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   } catch (error) {
     console.error("Error in middleware:", error);
-    return new NextResponse.error();
+    return new NextResponse.error(500, "error expected");
   }
 }
 
