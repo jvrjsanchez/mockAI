@@ -1,7 +1,10 @@
 import os
 import logging
 from flask import Flask
+from dotenv import load_dotenv
 from .extensions import db, migrate
+
+load_dotenv()
 
 
 def create_app():
@@ -13,6 +16,7 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['UPLOAD_FOLDER'] = '/tmp'
 
+    db.init_app(app)
     migrate.init_app(app, db)
 
     with app.app_context():

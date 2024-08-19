@@ -29,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <UserProvider>
+      <UserProvider loginUrl="/auth-service/api/auth/login">
         <head>
           <link
             rel="icon"

@@ -24,7 +24,7 @@ const Interview = () => {
             headers: { "Content-Type": "application/json" },
           }
         );
-        setSelectedQuestion(response.data.question);
+        setSelectedQuestion(response.data);
       } catch (error) {
         console.error(
           "Error fetching interview question from Gemini:",

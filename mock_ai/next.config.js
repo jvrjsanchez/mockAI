@@ -4,6 +4,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   outputFileTracing: true,
+  reactStrictMode: false,
 
   rewrites: async () => {
     return [
