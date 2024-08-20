@@ -30,7 +30,22 @@ class Result(db.Model):
     pause_durations = db.Column(db.String)
     ai_feedback = db.Column(db.String)
     audio_url = db.Column(db.String, nullable=True)
-
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
     user = db.relationship('User', backref=db.backref('results', lazy=True))
     question_rel = db.relationship(
         'Question', backref=db.backref('results', lazy=True))
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'question_id': self.question_id,
+            'question': self.question,
+            'score': self.score,
+            'transcript': self.transcript,
+            'filler_words': self.filler_words,
+            'long_pauses': self.long_pauses,
+            'pause_durations': self.pause_durations,
+            'ai_feedback': self.ai_feedback,
+            'audio_url': self.audio_url
+        }
