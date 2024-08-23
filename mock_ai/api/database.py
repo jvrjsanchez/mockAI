@@ -163,7 +163,7 @@ def update_feedback(user_id, feedback):
             logging.info("Feedback updated successfully")
             return True
     except Exception as e:
-        logging.error(f"Error updating feedback: {e}")
+        logging.error(f"Error updating feedback please: {e}")
         return False
 
 
