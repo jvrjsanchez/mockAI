@@ -97,14 +97,9 @@ def upload_audio():
                 },
 
             )
-            print("BLOB: ", buffer_data),
+            logging.info(f"Buffer data: {buffer_data}")
             AUDIO_URL = {"url": buffer_data.get("url")}
-            session['audio_url'] = buffer_data.get("url")
-
-            user = User.query.filter_by(email=user_email).first()
-            if user:
-                user.audio_url = buffer_data.get("url")
-                db.session.commit()
+            logging.info(f"Audio URL: {AUDIO_URL}")
 
             response = deepgram.listen.prerecorded.v("1").transcribe_url(
                 AUDIO_URL, options
@@ -136,6 +131,7 @@ def upload_audio():
             question_id=1,
             question=question,
             transcript=transcript,
+            audio_url=AUDIO_URL["url"],
             filler_words=filler_word_count_json,
             long_pauses=long_pauses,
             pause_durations=(
@@ -280,23 +276,35 @@ def get_results():
 @app.route('/service/generate_ai_response', methods=['POST', 'GET'])
 def generate_ai_response():
     try:
+        file_path = '/tmp/audio.wav'
         data = request.get_json()
         user_email = data.get('user')
 
-        url = session['audio_url']
+        userObject = User.query.filter_by(email=user_email).first()
+        userId = userObject.id
+        result = Result.query.filter_by(
+            user_id=userId).order_by(Result.id.desc()).first()
+
+        if not result or not result.audio_url:
+            logging.error("Audio URL not found in the Result table")
+            return jsonify({'error': 'Audio URL not found'}), 400
+
+        url = result.audio_url
+        logging.info(f"Audio URL retrieved from Result table: {url}")
 
         audio_res = requests.get(url)
         if audio_res.status_code != 200:
             return jsonify({'error': 'Failed to download audio file'}), 400
 
-        with open('/tmp/audio.wav', 'xb') as f:
-            f.write(audio_res.content)
-            print(audio_res.encoding)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            logging.info('Existing audio file deleted')
 
-        userObject = User.query.filter_by(email=user_email).first()
-        userId = userObject.id
-        question = Result.query.filter_by(user_id=userId).order_by(
-            Result.id.desc()).first().question
+        with open(file_path, 'xb') as f:
+            f.write(audio_res.content)
+            logging.info('Audio file saved')
+
+        question = result.question
 
         audio_file = io.BytesIO(audio_res.content)
         audio_content = audio_file.read()
@@ -305,15 +313,14 @@ def generate_ai_response():
 
         if gemini_response and user_email:
 
-            Result.query.filter_by(user_id=userId).order_by(
-                Result.id.desc()).first().ai_feedback = gemini_response
+            result.ai_feedback = gemini_response
             db.session.commit()
         else:
             print("No response from Gemini and user not provided.")
 
         return jsonify({"response": gemini_response})
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logging.error(f"An error occurred: {e}")
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
