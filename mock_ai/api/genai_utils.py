@@ -1,8 +1,7 @@
 import json
 import os
 import google.generativeai as genai
-from flask import send_from_directory
-from api import app
+import logging
 
 
 PROMPT_TO_AI = os.getenv("PROMPT_TO_AI")
@@ -32,21 +31,23 @@ def prompt_with_audio_file(audio_content, question):
     temp_audio_file_path = '/tmp/audio.wav'
 
     try:
+        # Save the audio to temporary file.
         with open(temp_audio_file_path, 'wb') as temp_audio_file:
             temp_audio_file.write(audio_content)
 
-        audio_res = send_from_directory('/tmp', 'audio.wav')
+        # Upload the audio file to the file API.
+        # https://ai.google.dev/gemini-api/docs/audio?lang=python
+        path_from_file_api = genai.upload_file(temp_audio_file_path)
 
-        user_response_audio = genai.upload_file(audio_res)
-
-        response = model.generate_content([prompt, user_response_audio])
+        # use the prompt and the path from the file API to generate the content from the model.
+        response = model.generate_content([prompt, path_from_file_api])
 
         return response.text
 
     except Exception as e:
-        # Handle exceptions (e.g., logging)
+        logging.error(f"An error occurred: {e}")
         print(f"An error occurred: {e}")
-        return None
+        return {"error": str(e)}
 
 
 def text_prompt_for_question():
