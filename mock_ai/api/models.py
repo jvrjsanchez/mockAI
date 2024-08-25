@@ -34,3 +34,10 @@ class Result(db.Model):
     user = db.relationship('User', backref=db.backref('results', lazy=True))
     question_rel = db.relationship(
         'Question', backref=db.backref('results', lazy=True))
+
+    # method to return the result as a dictionary so we can jsonify it.
+    def get_as_dict(self) -> dict:
+        result_dict = dict(id=self.id, user_id=self.user_id, question_id=self.question_id, question=self.question, score=self.score, transcript=self.transcript,
+                           filler_words=self.filler_words, long_pauses=self.long_pauses, pause_durations=self.pause_durations, ai_feedback=self.ai_feedback, audio_url=self.audio_url)
+
+        return result_dict

@@ -13,17 +13,6 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from api.genai_utils import text_prompt_for_question, prompt_with_audio_file
 from api.audio_analysis import analyze_audio
-from api.database import (
-    init_db,
-    add_user,
-    get_all_users,
-    add_question,
-    get_all_questions,
-    get_user_by_email,
-    save_transcript,
-    get_last_transcript,
-    update_feedback,
-)
 from api.models import User, Question, Result
 from api.genai_utils import prompt_with_audio_file, extract_analysis_results
 
@@ -47,11 +36,6 @@ load_dotenv()
 deepgram = DeepgramClient(os.getenv("DG_API_KEY"))
 
 IS_PRODUCTION = os.getenv("FLASK_ENV") == "production"
-
-temp_dir_path = os.path.join('tmp', 'audio.wav')
-
-
-audio_file_path = os.path.join(os.path.dirname(__file__), 'audio.wav')
 
 
 @app.route("/service/upload_audio", methods=["POST"])
@@ -97,14 +81,9 @@ def upload_audio():
                 },
 
             )
-            print("BLOB: ", buffer_data),
+            logging.info(f"Buffer data: {buffer_data}")
             AUDIO_URL = {"url": buffer_data.get("url")}
-            session['audio_url'] = buffer_data.get("url")
-
-            user = User.query.filter_by(email=user_email).first()
-            if user:
-                user.audio_url = buffer_data.get("url")
-                db.session.commit()
+            logging.info(f"Audio URL: {AUDIO_URL}")
 
             response = deepgram.listen.prerecorded.v("1").transcribe_url(
                 AUDIO_URL, options
@@ -117,30 +96,6 @@ def upload_audio():
             response = deepgram.listen.prerecorded.v("1").transcribe_file(
                 payload, options
             )
-
-        # Download the file from Vercel blob store (optional)
-
-        def download_a_file_on_the_server():
-            try:
-                if IS_PRODUCTION:
-                    print(audio_file_path)
-
-                    vercel_blob.download_file(
-                        AUDIO_URL["url"], temp_dir_path)
-                    os.path.join('tmp', audio_file.filename)
-                    print("File downloaded successfully")
-                else:
-                    print("FLASK_ENV is not set to production. Skipping file download.")
-            except OSError as e:
-
-                print(f"OS error: {e}")
-                traceback.print_exc()
-            except Exception as e:
-
-                print(f"An unexpected error occurred: {e}")
-                traceback.print_exc()
-
-        # download_a_file_on_the_server()
 
         userObject = User.query.filter_by(email=user_email).first()
 
@@ -160,6 +115,7 @@ def upload_audio():
             question_id=1,
             question=question,
             transcript=transcript,
+            audio_url=AUDIO_URL["url"],
             filler_words=filler_word_count_json,
             long_pauses=long_pauses,
             pause_durations=(
@@ -293,32 +249,46 @@ def get_results():
         userId = User.query.filter_by(email=user).first().id
 
         results = Result.query.filter_by(user_id=userId).all()
-        return jsonify(results)
+        results_dict = [result.get_as_dict() for result in results]
+        return jsonify(results_dict)
 
     except Exception as e:
+        logging.error(f"An error occurred: {e}")
         return jsonify({"error": str(e)}), 500
 
 
 @app.route('/service/generate_ai_response', methods=['POST', 'GET'])
 def generate_ai_response():
     try:
+        file_path = '/tmp/audio.wav'
         data = request.get_json()
         user_email = data.get('user')
 
-        url = session['audio_url']
+        userObject = User.query.filter_by(email=user_email).first()
+        userId = userObject.id
+        result = Result.query.filter_by(
+            user_id=userId).order_by(Result.id.desc()).first()
+
+        if not result or not result.audio_url:
+            logging.error("Audio URL not found in the Result table")
+            return jsonify({'error': 'Audio URL not found'}), 400
+
+        url = result.audio_url
+        logging.info(f"Audio URL retrieved from Result table: {url}")
 
         audio_res = requests.get(url)
         if audio_res.status_code != 200:
             return jsonify({'error': 'Failed to download audio file'}), 400
 
-        with open('/tmp/audio.wav', 'xb') as f:
-            f.write(audio_res.content)
-            print(audio_res.encoding)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            logging.info('Existing audio file deleted')
 
-        userObject = User.query.filter_by(email=user_email).first()
-        userId = userObject.id
-        question = Result.query.filter_by(user_id=userId).order_by(
-            Result.id.desc()).first().question
+        with open(file_path, 'xb') as f:
+            f.write(audio_res.content)
+            logging.info('Audio file saved')
+
+        question = result.question
 
         audio_file = io.BytesIO(audio_res.content)
         audio_content = audio_file.read()
@@ -327,15 +297,14 @@ def generate_ai_response():
 
         if gemini_response and user_email:
 
-            Result.query.filter_by(user_id=userId).order_by(
-                Result.id.desc()).first().ai_feedback = gemini_response
+            result.ai_feedback = gemini_response
             db.session.commit()
         else:
             print("No response from Gemini and user not provided.")
 
         return jsonify({"response": gemini_response})
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logging.error(f"An error occurred: {e}")
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
