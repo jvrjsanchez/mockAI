@@ -118,30 +118,6 @@ def upload_audio():
                 payload, options
             )
 
-        # Download the file from Vercel blob store (optional)
-
-        def download_a_file_on_the_server():
-            try:
-                if IS_PRODUCTION:
-                    print(audio_file_path)
-
-                    vercel_blob.download_file(
-                        AUDIO_URL["url"], temp_dir_path)
-                    os.path.join('tmp', audio_file.filename)
-                    print("File downloaded successfully")
-                else:
-                    print("FLASK_ENV is not set to production. Skipping file download.")
-            except OSError as e:
-
-                print(f"OS error: {e}")
-                traceback.print_exc()
-            except Exception as e:
-
-                print(f"An unexpected error occurred: {e}")
-                traceback.print_exc()
-
-        # download_a_file_on_the_server()
-
         userObject = User.query.filter_by(email=user_email).first()
 
         if userObject is None:
@@ -293,9 +269,11 @@ def get_results():
         userId = User.query.filter_by(email=user).first().id
 
         results = Result.query.filter_by(user_id=userId).all()
-        return jsonify(results)
+        results_dict = [result.get_as_dict() for result in results]
+        return jsonify(results_dict)
 
     except Exception as e:
+        logging.error(f"An error occurred: {e}")
         return jsonify({"error": str(e)}), 500
 
 
