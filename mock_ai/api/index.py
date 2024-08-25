@@ -13,17 +13,6 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from api.genai_utils import text_prompt_for_question, prompt_with_audio_file
 from api.audio_analysis import analyze_audio
-from api.database import (
-    init_db,
-    add_user,
-    get_all_users,
-    add_question,
-    get_all_questions,
-    get_user_by_email,
-    save_transcript,
-    get_last_transcript,
-    update_feedback,
-)
 from api.models import User, Question, Result
 from api.genai_utils import prompt_with_audio_file, extract_analysis_results
 
@@ -47,11 +36,6 @@ load_dotenv()
 deepgram = DeepgramClient(os.getenv("DG_API_KEY"))
 
 IS_PRODUCTION = os.getenv("FLASK_ENV") == "production"
-
-temp_dir_path = os.path.join('tmp', 'audio.wav')
-
-
-audio_file_path = os.path.join(os.path.dirname(__file__), 'audio.wav')
 
 
 @app.route("/service/upload_audio", methods=["POST"])
