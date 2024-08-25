@@ -24,8 +24,7 @@ const Results = () => {
           headers: { "Content-Type": "application/json" },
         })
         .then((response) => {
-          setResults([response.data]);
-          console.log([response.data]);
+          setResults(response.data);
         })
         .catch((error) => {
           console.error("Error fetching results:", error);
@@ -46,7 +45,7 @@ const Results = () => {
           }
         )
         .then((response) => {
-          setAnalysis([response.data.response]);
+          setAnalysis(response.data.response);
         })
         .catch((error) => {
           console.error("Error fetching results:", error);
