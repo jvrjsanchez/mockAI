@@ -5,6 +5,7 @@ import os
 import io
 import traceback
 import json
+from datetime import datetime
 import logging
 import vercel_blob
 from deepgram import DeepgramClient, PrerecordedOptions, FileSource
@@ -118,6 +119,7 @@ def upload_audio():
             audio_url=AUDIO_URL["url"],
             filler_words=filler_word_count_json,
             long_pauses=long_pauses,
+            interview_date=datetime.utcnow(),
             pause_durations=(
                 0 if len(pause_durations) == 0 else json.dumps(pause_durations)
             ),
@@ -233,6 +235,8 @@ def save_results():
                 filler_word_count=result.get("filler_word_count"),
                 long_pauses=result.get("long_pauses"),
                 pause_durations=result.get("pause_durations"),
+
+
             )
             db.session.add(new_result)
             db.session.commit()
@@ -255,6 +259,20 @@ def get_results():
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/service/get_all_results', methods=['GET'])
+def get_all_results_for_user():
+    try:
+        user = request.args.get('user').strip()
+        userId = User.query.filter_by(email=user).first().id
+
+        results = Result.query.filter_by(user_id=userId).all()
+        results_dict = [result.get_as_dict() for result in results]
+        return jsonify(results_dict)
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/service/generate_ai_response', methods=['POST', 'GET'])
