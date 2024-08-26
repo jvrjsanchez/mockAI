@@ -1,50 +1,29 @@
-'use client'
-import { useUser } from '@auth0/nextjs-auth0/client'
-import Image from 'next/image'
+import CallToAction from "./CallToAction";
+import HeroSection from "./Hero/HeroSection";
+import Testimonials from "./Testimonials/Testimonials";
+import WhyChooseSection from "./WhyChooseUs/WhyChooseSection";
 
-const Template = () => {
-  const { user, error, isLoading } = useUser()
+import HowItWorksSection from "./HowItWorksSection";
 
-  if (isLoading) return <div>Loading...</div>
-  console.log(user)
-
-  if (error) return <div>Error: {error.message}</div>
-
+export default function Template() {
   return (
-    <div className='hero'>
-      <div className='flex-1 pt-36 padding-x'>
-        <h1 className='hero__title'>
-          Interview confidently with the help of A.I.!
-        </h1>
+    <div className="flex flex-col min-h-screen items-center bg-[#0a0b2e] text-white">
+      <main className="flex-1">
+        <HeroSection />
+        <WhyChooseSection />
+        <HowItWorksSection />
 
-        <p className='hero__subtitle'>
-          We help you prepare for your interviews by providing you with the most common questions asked by top companies.
-        </p>
+        <Testimonials />
 
-        {user
-          ? (
-            <a href='/interview'
-              title="Start Your Interview"
-              className='bg-primary-blue text-white mt-10 rounded-full'>
-              Start Your Interview
-            </a>
-            )
-          : (
-        <a
-          href='/api/auth/login'
-          title="Start Your Interview"
-          className='bg-primary-blue text-white mt-10 rounded-full'
-        >Sign In to Start Your Interview
-        </a>
-            )}
-      </div>
-      <div className='hero__image-container'>
-        <div className='hero__image'>
-          <Image src="/PngItem_1500512.png" alt="interview" fill className='object-contain' />
-        </div>
-      </div>
+        <CallToAction
+          title="Ready to Transform Your Interview Experience?"
+          subTitle="Whether you're preparing for your next career move or
+              looking to streamline your hiring process, Mockai has
+              you covered."
+          btnText="Get Started"
+          enticeText="Start your free trial today. No credit card required."
+        />
+      </main>
     </div>
-  )
+  );
 }
-
-export default Template
