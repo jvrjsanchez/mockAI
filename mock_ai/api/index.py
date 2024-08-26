@@ -260,7 +260,7 @@ def get_results():
         # get the last updated result for the user.
         last_updated_result = Result.query.filter_by(user_id=userId).order_by(desc(Result.updated_at)).first()
         if last_updated_result:
-            return jsonify(last_updated_result.to_dict())
+            return jsonify(last_updated_result.get_as_dict())
         else:
             return jsonify({"message": "No results found"}), 404
 
