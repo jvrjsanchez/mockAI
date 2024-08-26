@@ -18,16 +18,23 @@ const testimonials = [
 
 const Testimonials = () => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {testimonials.map((testimonial, index) => (
-        <TestimonialCard
-          key={index}
-          text={testimonial.text}
-          author={testimonial.author}
-          rating={5}
-        />
-      ))}
-    </div>
+    <section className="w-full py-12 md:py-24 lg:py-32 bg-[#0f1033]">
+      <div className="container px-4 md:px-6">
+        <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12">
+          What Our Users Say
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {testimonials.map((testimonial, index) => (
+            <TestimonialCard
+              key={index}
+              text={testimonial.text}
+              author={testimonial.author}
+              rating={5}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
   );
 };
 
