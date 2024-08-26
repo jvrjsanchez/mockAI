@@ -2,6 +2,7 @@ from .extensions import db
 from flask import request, jsonify, session
 import requests
 from sqlalchemy import desc
+from sqlalchemy.exc import SQLAlchemyError
 import os
 import io
 import traceback
