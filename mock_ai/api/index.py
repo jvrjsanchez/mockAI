@@ -246,15 +246,26 @@ def save_results():
 def get_results():
     try:
         user = request.args.get("user").strip()
-        userId = User.query.filter_by(email=user).first().id
+        if not user:
+            return jsonify({"error": "User is required"}), 400
+        
+        user = user.strip()
+        user_record = User.query.filter_by(email=user).first()
+        if not user_record:
+            return jsonify({"error": "User not found"}), 404
+        
+        userId = user_record.id
+        # get the last updated result for the user.
+        last_updated_result = Result.query.filter_by(user_id=userId).order_by(desc(Result.updated_at)).first()
+        if last_updated_result:
+            return jsonify(last_updated_result.to_dict())
+        else:
+            return jsonify({"message": "No results found"}), 404
 
-        results = Result.query.filter_by(user_id=userId).all()
-        results_dict = [result.get_as_dict() for result in results]
-        return jsonify(results_dict)
-
+    except SQLAlchemyError as e:
+        return jsonify({"error": "Database error", "details": str(e)}), 500
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
 
 @app.route('/service/generate_ai_response', methods=['POST', 'GET'])

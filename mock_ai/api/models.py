@@ -23,6 +23,9 @@ class Result(db.Model):
     question_id = db.Column(db.Integer, db.ForeignKey(
         'questions.id'), nullable=False)
     question = db.Column(db.String, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, nullable = True, default=db.func.now()
+    )
     score = db.Column(db.Float, nullable=True)
     transcript = db.Column(db.String, nullable=False)
     filler_words = db.Column(db.String, nullable=False)
