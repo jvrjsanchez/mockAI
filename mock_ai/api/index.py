@@ -1,7 +1,7 @@
 from .extensions import db
 from flask import request, jsonify, session
 import requests
-from sqlalquemy import desc
+from sqlalchemy import desc
 import os
 import io
 import traceback
