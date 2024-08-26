@@ -6,15 +6,6 @@ import { useState } from "react";
 
 const Header = () => {
   const { user, error, isLoading } = useUser();
-  const [isAccordionOpen, setIsAccordionOpen] = useState(false);
-
-  const handleAccordionClick = () => {
-    setIsAccordionOpen(!isAccordionOpen);
-  };
-
-  const closeAccordion = () => {
-    setIsAccordionOpen(false);
-  };
 
   return (
     <header className="px-4 lg:px-6  flex items-center">
