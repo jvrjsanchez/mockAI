@@ -45,8 +45,12 @@ flask_api/__pycache__/
 flask_api/*.pyc
 myenv/
 venv/
-flask_api/.env
+
 api/.env
+.env.local
+
+api/.env*
+
 
 # Envirnoments
 .env 
