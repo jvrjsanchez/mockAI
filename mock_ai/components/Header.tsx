@@ -1,79 +1,61 @@
-'use client'
-import Link from 'next/link'
-import Image from 'next/image'
-import { useUser } from '@auth0/nextjs-auth0/client'
-import { useState } from 'react'
+"use client";
+import Link from "next/link";
+import Image from "next/image";
+import { useUser } from "@auth0/nextjs-auth0/client";
+import { useState } from "react";
 
 const Header = () => {
-  const { user, error, isLoading } = useUser()
-  const [isAccordionOpen, setIsAccordionOpen] = useState(false)
+  const { user, error, isLoading } = useUser();
+  const [isAccordionOpen, setIsAccordionOpen] = useState(false);
 
   const handleAccordionClick = () => {
-    setIsAccordionOpen(!isAccordionOpen)
-  }
+    setIsAccordionOpen(!isAccordionOpen);
+  };
 
   const closeAccordion = () => {
-    setIsAccordionOpen(false)
-  }
+    setIsAccordionOpen(false);
+  };
 
   return (
-    <header className='w-full absolute z-10'>
-      <nav className='max-w-[1440px] mx-auto flex justify-between items-center sm:px-16 py-4 px-6'>
-        <Link href='/' className='flex justify-center items-center'>
-          <Image src='/mockAILogo.jpeg' alt='mockAI' width={118} height={18} />
+    <header className="px-4 lg:px-6  flex items-center">
+      <Link className="flex items-center justify-center" href="#">
+        <Image
+          className="rounded-lg shadow-lg bg-white z-10 m-1 w-20 h-16 sm:w-24 sm:h-20"
+          src="/mockAILogo.jpeg"
+          alt="Mockai Logo"
+          width={80}
+          height={65}
+        />
+        <span className="sr-only">Mockai</span>
+      </Link>
+      <nav className="ml-auto flex gap-4 sm:gap-6">
+        <Link
+          className="text-sm font-medium hover:text-[#ff3b9a] transition-colors"
+          href="#"
+        >
+          Features
         </Link>
-        <div className='relative'>
-          <button
-            onClick={handleAccordionClick}
-            className='flex items-center justify-center'
-          >
-            Menu
-          </button>
-          {isAccordionOpen && (
-            <div className='absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg'>
-              <ul>
-                <li onClick={closeAccordion}>
-                  <Link href='/tips' title='Tips' className='block px-4 py-2'>
-                    Tips
-                  </Link>
-                </li>
-                {isLoading
-                  ? (
-                  <li className='block px-4 py-2'>Loading...</li>
-                    )
-                  : error
-                    ? (
-                  <li className='block px-4 py-2'>Error: {error.message}</li>
-                      )
-                    : user
-                      ? (
-                  <>
-                    <li onClick={closeAccordion}>
-                      <Link href='/user_account' title='User Account' className='block px-4 py-2'>
-                        {user.name}
-                      </Link>
-                    </li>
-                    <li onClick={closeAccordion}>
-                      <a title='Log Out' href='/api/auth/logout' className='block px-4 py-2'>
-                        Log Out
-                      </a>
-                    </li>
-                  </>
-                        )
-                      : (
-                  <li onClick={closeAccordion}>
-                    <a title='Sign In' href='/api/auth/login' className='block px-4 py-2'>
-                      Sign In
-                    </a>
-                  </li>
-                        )}
-              </ul>
-            </div>
-          )}
-        </div>
+        <Link
+          className="text-sm font-medium hover:text-[#ff3b9a] transition-colors"
+          href="#"
+        >
+          Pricing
+        </Link>
+        <Link
+          className="text-sm font-medium hover:text-[#ff3b9a] transition-colors"
+          href="#"
+        >
+          About
+        </Link>
+        <Link
+          className="text-sm font-medium hover:text-[#ff3b9a] transition-colors"
+          href="#"
+        >
+          Contact
+        </Link>
       </nav>
     </header>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;
