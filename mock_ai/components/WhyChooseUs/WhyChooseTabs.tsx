@@ -22,24 +22,16 @@ const WhyChooseTabs = () => {
       className="w-full max-w-[800px] mx-auto"
       onValueChange={(value) => setActiveTab(value)}
     >
-      <TabsList className="grid  grid-cols-2 mb-8 gap-4">
+      <TabsList className="grid  p-1 grid-cols-2 mb-8">
         <TabsTrigger
           value="jobseekers"
-          className={`py-2 px-4 w-19 text-center ${
-            activeTab === "jobseekers"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-200 text-gray-700"
-          }`}
+          className="py-1 px-4 w-19 text-center"
         >
           For Job Seekers
         </TabsTrigger>
         <TabsTrigger
           value="businesses"
-          className={`py-2 px-4 w-19 text-center ${
-            activeTab === "businesses"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-200 text-gray-700"
-          }`}
+          className="py-1 px-4 w-19 text-center"
         >
           For Businesses
         </TabsTrigger>
