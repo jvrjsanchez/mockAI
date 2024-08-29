@@ -9,3 +9,8 @@ export type Feedback = {
   long_pauses: number;
   pause_durations: number[];
 };
+
+export type Question = {
+  id: number;
+  question: string;
+};

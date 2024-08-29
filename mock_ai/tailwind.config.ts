@@ -23,12 +23,17 @@ module.exports = {
           100: "rgba(59,60,152,0.02)",
         },
         grey: "#747A88",
+        midnight: "#0B0A10",
+        muted: {
+          DEFAULT: "#F2F1F9",
+          foreground: "#72717C",
+        },
       },
       backgroundImage: {
-        'pattern': "url('/pattern.png')",
-        'hero-bg': "url('/hero-bg.png')"
-      }
+        pattern: "url('/pattern.png')",
+        "hero-bg": "url('/hero-bg.png')",
+      },
     },
   },
-  plugins: [],
+  plugins: ["@tailwind-merge"],
 };
