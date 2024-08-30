@@ -21,15 +21,15 @@ export const metadata: Metadata = {
   description: "Level up your interviewing skills.",
 };
 
-export default function RootLayout ({
-  children
+export default function RootLayout({
+  children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-      <html lang="en">
+    <html lang="en">
       <UserProvider>
-      <head>
+        <head>
           <link
             rel="icon"
             href="/icon.jpeg"
@@ -47,11 +47,13 @@ export default function RootLayout ({
           )}
         >
           {" "}
-          <Header />
-          {children}
-          <Footer />
+          <div className="flex flex-col min-h-screen bg-[#0a0b2e] text-white">
+            <Header />
+            {children}
+            <Footer />
+          </div>
         </body>
       </UserProvider>
-      </html>
-  )
+    </html>
+  );
 }

@@ -33,7 +33,8 @@ class Result(db.Model):
     pause_durations = db.Column(db.String)
     ai_feedback = db.Column(db.String)
     audio_url = db.Column(db.String, nullable=True)
-    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    interview_date = db.Column(
+        db.DateTime, nullable=True, default=db.func.now())
     user = db.relationship('User', backref=db.backref('results', lazy=True))
     question_rel = db.relationship(
         'Question', backref=db.backref('results', lazy=True))
