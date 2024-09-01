@@ -87,8 +87,8 @@ export default function LandingPage() {
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="jobseekers">
-                  <Button className="w-full bg-[#ff6db3] text-[#050614] hover:bg-[#ff6db3]/90 focus:ring-2 focus:ring-[#ff6db3] focus:ring-offset-2 focus:ring-offset-[#050614]">
-                    Start Practicing Now
+                  <Button asChild className="w-full bg-[#ff6db3] text-[#050614] hover:bg-[#ff6db3]/90 focus:ring-2 focus:ring-[#ff6db3] focus:ring-offset-2 focus:ring-offset-[#050614]">
+                    <Link href="/api/auth/login">Start Practicing Now</Link>
                   </Button>
                 </TabsContent>
                 <TabsContent value="businesses">

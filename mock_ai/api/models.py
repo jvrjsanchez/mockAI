@@ -42,6 +42,6 @@ class Result(db.Model):
     # method to return the result as a dictionary so we can jsonify it.
     def get_as_dict(self) -> dict:
         result_dict = dict(id=self.id, user_id=self.user_id, question_id=self.question_id, question=self.question, updated_at=self.updated_at, score=self.score, transcript=self.transcript,
-                           filler_words=self.filler_words, long_pauses=self.long_pauses, pause_durations=self.pause_durations, ai_feedback=self.ai_feedback, audio_url=self.audio_url)
+                           filler_words=self.filler_words, long_pauses=self.long_pauses, pause_durations=self.pause_durations, ai_feedback=self.ai_feedback, audio_url=self.audio_url, interview_date=self.interview_date)
 
         return result_dict

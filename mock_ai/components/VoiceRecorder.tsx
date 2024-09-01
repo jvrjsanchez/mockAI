@@ -191,9 +191,6 @@ export default function VoiceRecorder ({
               <span className="text-gray-600">Uploading...</span>
             </div>
           )}
-          {feedback && showFeedback && (
-            <FillerCount feedback={feedback} />
-          )}
         </div>
       </div>
     </div>
