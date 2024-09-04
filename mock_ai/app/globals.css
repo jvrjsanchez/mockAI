@@ -36,6 +36,29 @@
   @apply flex flex-row relative justify-center items-center py-3 px-6 outline-none;
 }
 
+/* START: Fade-in and fade-out effects */
+.fade-in {
+  @apply opacity-0;
+  animation: fadeIn 1s forwards;
+}
+
+.fade-out {
+  animation: fadeOut 1s forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+  }
+}
+/* END: Fade-in and fade-out effects */
+
 /* START: Hero styles */
 .hero {
   @apply flex xl:flex-row flex-col gap-5 relative z-0 max-w-[1440px] mx-auto;
@@ -81,3 +104,8 @@
 }
 /* END: Home styles */
 
+/* START: Result card styles */
+.result-card {
+  @apply p-4 mb-4 bg-gray-100 rounded-lg;
+}
+/* END: Result card styles */
