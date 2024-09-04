@@ -11,6 +11,8 @@ import json
 from datetime import datetime
 import logging
 import vercel_blob
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import desc
 from deepgram import DeepgramClient, PrerecordedOptions, FileSource
 from flask_cors import CORS
 from dotenv import load_dotenv
