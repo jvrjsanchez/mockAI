@@ -6,9 +6,8 @@ import AnalysisCard from "./AnalysisCard";
 
 const Results = () => {
   const { user } = useUser();
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<any[]>([]); // Treat results as an array
   const [saveResults, setSaveResults] = useState(false);
-  const [analysis, setAnalysis] = useState<any>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [email, setEmail] = useState(user?.email);
 
@@ -16,6 +15,7 @@ const Results = () => {
     setEmail(user?.email);
   }, [user?.email]);
 
+  // Fetch results and handle both object and array response
   useEffect(() => {
     if (email) {
       axios
@@ -24,7 +24,16 @@ const Results = () => {
           headers: { "Content-Type": "application/json" },
         })
         .then((response) => {
-          setResults(response.data);
+          // Check if response is an array or object
+          const fetchedResults = Array.isArray(response.data)
+            ? response.data
+            : [response.data]; // If it's an object, convert it to an array
+
+          setResults(fetchedResults); // Save fetched results in state
+          console.log('Fetched results:', fetchedResults);
+
+          // Fetch AI analysis after fetching results
+          fetchAIAnalysis(fetchedResults);
         })
         .catch((error) => {
           console.error("Error fetching results:", error);
@@ -32,7 +41,8 @@ const Results = () => {
     }
   }, [email]);
 
-  useEffect(() => {
+  // Fetch AI analysis and update results state with ai_feedback
+  const fetchAIAnalysis = (fetchedResults) => {
     if (email) {
       setAnalysisLoading(true);
 
@@ -45,29 +55,66 @@ const Results = () => {
           }
         )
         .then((response) => {
-          setAnalysis(response.data.response);
+          const analysisData = typeof response.data.response === 'string'
+            ? [response.data.response]
+            : Array.isArray(response.data.response)
+            ? response.data.response
+            : [];
+
+          // Update each result with its corresponding ai_feedback
+          const updatedResults = fetchedResults.map((result, index) => ({
+            ...result,
+            ai_feedback: analysisData[index] || '' // Assign corresponding analysis or empty string
+          }));
+
+          setResults(updatedResults); // Update the results state with ai_feedback
+          console.log('Updated results with AI feedback:', updatedResults);
         })
         .catch((error) => {
-          console.error("Error fetching results:", error);
+          console.error("Error fetching analysis:", error);
         })
         .finally(() => setAnalysisLoading(false));
     }
-  }, [email]);
+  };
 
   const handleSaveToggle = () => {
-    setSaveResults(!saveResults);
+    setSaveResults(!saveResults); // Toggle the saveResults state
   };
 
   const handleSaveResults = () => {
+    if (results.length === 0) {
+      alert("No results available to save. Please ensure you have completed the interview.");
+      console.warn('Attempted to save results, but the results array is empty.');
+      return;
+    }
+
     if (saveResults) {
+      const payload = {
+        user: user?.email,
+        results: results.map(result => ({
+          question_id: result.question_id,
+          question: result.question,
+          transcript: result.transcript,
+          score: result.score,
+          filler_word_count: result.filler_words,
+          long_pauses: result.long_pauses,
+          pause_durations: result.pause_durations,
+          ai_feedback: result.ai_feedback || '' // Include ai_feedback
+        }))
+      };
+
+      console.log('Saving results payload:', payload);
+
       axios
-        .post("/service/save_results", { user: user?.email, results })
+        .post('/service/save_results', payload)
         .then(() => {
-          alert("Results saved successfully.");
+          alert('Results saved successfully.');
         })
         .catch((error) => {
-          console.error("Error saving results:", error);
+          console.error('Error saving results:', error);
         });
+    } else {
+      console.log('Save results is not enabled.');
     }
   };
 
@@ -104,32 +151,38 @@ const Results = () => {
           <h1 className="text-2xl font-bold">
             Your Interview Feedback Powered by mockAI
           </h1>
-          <h2></h2>
-          {results.map((result, index) => (
-            <div key={index} className="result-card">
-              <h2 className="text-xl font-bold">{result.question}</h2>
-              <p>
-                <strong>Score:</strong> {result.score}
-              </p>
-              <p>
-                <strong>Transcript:</strong> {result.transcript}
-              </p>
-              <p>
-                <strong>Filler Words:</strong> {result.filler_words}
-              </p>
-              <p>
-                <strong>Long Pauses:</strong> {result.long_pauses}
-              </p>
-              <p>
-                <strong>Pause Durations:</strong>{" "}
-                {result.pause_durations}
-              </p>
-              <p>
-                <strong>Interview Date:</strong>{" "}
-                {result.interview_date}
-              </p>
-            </div>
-          ))}
+          {results.length > 0 ? (
+            results.map((result, index) => (
+              <div key={index} className="result-card">
+                <h2 className="text-xl font-bold">{result.question}</h2>
+                <p>
+                  <strong>Score:</strong> {result.score}
+                </p>
+                <p>
+                  <strong>Transcript:</strong> {result.transcript}
+                </p>
+                <p>
+                  <strong>Filler Words:</strong> {result.filler_words}
+                </p>
+                <p>
+                  <strong>Long Pauses:</strong> {result.long_pauses}
+                </p>
+                <p>
+                  <strong>Pause Durations:</strong>{" "}
+                  {result.pause_durations}
+                </p>
+                <p>
+                  <strong>Interview Date:</strong>{" "}
+                  {result.interview_date}
+                </p>
+                <p>
+                  <strong>AI Feedback:</strong> {result.ai_feedback}
+                </p>
+              </div>
+            ))
+          ) : (
+            <p>No results available</p>
+          )}
           {analysisLoading && (
             <p className="animate-ping text-center">
               Analyzing your answer...
@@ -137,7 +190,7 @@ const Results = () => {
           )}
           <AnalysisCard
             title="Mock AI Analysis"
-            analysis={analysis}
+            analysis={results.map(result => result.ai_feedback)}
           />
           <div className="flex items-center mt-4">
             <label className="mr-2 text-lg font-medium">
@@ -146,7 +199,7 @@ const Results = () => {
             <input
               type="checkbox"
               checked={saveResults}
-              onChange={handleSaveToggle}
+              onChange={handleSaveToggle} // Toggle save state
               className="w-6 h-6"
             />
           </div>

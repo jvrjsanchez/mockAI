@@ -10,8 +10,17 @@ PROMPT_TO_AI = os.getenv("PROMPT_TO_AI")
 genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
 
 
-def prompt_with_audio_file(audio_content, question):
-    # Create the model
+def prompt_with_audio_file(audio_content, prompt):
+    """
+    Sends an audio file and a dynamic prompt to Google Gemini for processing.
+
+    Parameters:
+    audio_content (bytes): The audio content in bytes.
+    prompt (str): The dynamic prompt generated based on the user's inputs.
+
+    Returns:
+    str: The text response from Google Gemini.
+    """
     generation_config = {
         "temperature": 1,
         "top_p": 0.95,
@@ -23,23 +32,21 @@ def prompt_with_audio_file(audio_content, question):
     model = genai.GenerativeModel(
         model_name="gemini-1.5-pro",
         generation_config=generation_config,
-        system_instruction=ai_sys_instruction(question),
+        system_instruction=prompt,
     )
-
-    prompt = PROMPT_TO_AI + question
 
     temp_audio_file_path = '/tmp/audio.wav'
 
     try:
-        # Save the audio to temporary file.
+        # Save the audio to a temporary file
         with open(temp_audio_file_path, 'wb') as temp_audio_file:
             temp_audio_file.write(audio_content)
 
-        # Upload the audio file to the file API.
+        # Upload the audio file to the file API
         # https://ai.google.dev/gemini-api/docs/audio?lang=python
         path_from_file_api = genai.upload_file(temp_audio_file_path)
 
-        # use the prompt and the path from the file API to generate the content from the model.
+        # Use the prompt and the path from the file API to generate the content from the model
         response = model.generate_content([prompt, path_from_file_api])
 
         return response.text
@@ -50,42 +57,39 @@ def prompt_with_audio_file(audio_content, question):
         return {"error": str(e)}
 
 
-def text_prompt_for_question():
-    # Create the model
+def text_prompt_for_question(prompt):
+    """
+    Sends a text-based prompt to Google Gemini to generate an interview question.
+
+    Parameters:
+    prompt (str): The dynamic prompt generated based on the user's inputs.
+
+    Returns:
+    str: The text response from Google Gemini.
+    """
     generation_config = {
         "temperature": 0.7,
         "top_p": 0.95,
         "top_k": 64,
         "max_output_tokens": 8192,
-
         "response_mime_type": "text/plain",
     }
-
-    system_instruction = (
-        "Your role is a job interviewer for a website called 'mockAI'. "
-        "Ask a behavioral question to the interviewee. The goal of this question is to understand how the interviewee handles a situation. "
-        "Ask the interviewee to answer the question within 3 minutes. Address them by their name if you understood it."
-    )
-
-    prompt = "You are an interviewer for a website called 'mockAI'. Ask a behavioral question to the interviewee. The goal of this question is to understand how the interviewee handles a situation. Ask the interviewee to answer the question within 3 minutes. Address them by their name if you understood it. "
 
     model = genai.GenerativeModel(
         model_name="gemini-1.5-pro",
         generation_config=generation_config,
-        system_instruction=system_instruction
+        system_instruction=prompt,
     )
 
     response = model.generate_content(
         prompt,
         generation_config=genai.types.GenerationConfig(
-
             candidate_count=1,
-
             max_output_tokens=8192,
             temperature=0.7,
         ),
     )
-    print("RES: ", response)
+    logging.info(f"Generated question: {response.text}")
     return response.text
 
 
