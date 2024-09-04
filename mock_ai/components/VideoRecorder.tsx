@@ -1,64 +1,59 @@
-'use client'
-import { useState, useEffect } from 'react'
-import { useVoiceRecorder } from '@/hooks/useVoiceRecorder'
-import useUploadAudio from '@/hooks/useUpload'
-import FillerCount from './FillerCount'
-import { Feedback } from '@/types'
+'use client';
+import { useState, useEffect } from 'react';
+import { useVideoRecorder } from '@/hooks/useVideoRecorder';
+import useUploadVideo from '@/hooks/useUploadVideo';
+import { Feedback } from '@/types';
 
-interface VoiceRecorderProps {
+interface VideoRecorderProps {
   selectedQuestion: string;
   user: any;
 }
 
-export default function VoiceRecorder ({
-  selectedQuestion,
-  user
-}: VoiceRecorderProps) {
-  const [feedback, setFeedback] = useState<Feedback | null>(null)
-  const [showFeedback, setShowFeedback] = useState(false)
+export default function VideoRecorder({ selectedQuestion, user }: VideoRecorderProps) {
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const {
     isRecording,
     recordingComplete,
-    audioUrl,
+    videoUrl,
     transcript,
     startRecording,
     stopRecording,
-    audioBlob
-  } = useVoiceRecorder()!
+    videoBlob,
+  } = useVideoRecorder();
 
-  const { isLoading } = useUploadAudio()
+  const { isLoading } = useUploadVideo();
 
-  const handleUpload = async (audioBlob: Blob) => {
-    const formData = new FormData()
-    formData.append('audio', audioBlob)
-    formData.append('user', user.email)
-    formData.append('question', selectedQuestion)
+  const handleUpload = async (videoBlob: Blob) => {
+    const formData = new FormData();
+    formData.append('video', videoBlob);
+    formData.append('user', user.email);
+    formData.append('question', selectedQuestion);
 
     const URL =
-      process.env.NODE_ENV === "production"
-        ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/service/upload_audio`
-        : "http://localhost:3001/service/upload_audio";
+      process.env.NODE_ENV === 'production'
+        ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/service/upload_video`
+        : 'http://localhost:3001/service/upload_video';
 
     try {
-      const response = await fetch(
-        URL,
-        {
-          method: 'POST',
-          body: formData
-        }
-      )
-      const data = await response.json()
-      setFeedback(data)
-      setShowFeedback(true)
-    } catch (error) {
-      console.error('Error uploading audio file:', error)
-      setFeedback(null)
-      setShowFeedback(false)
-    }
-  }
+      const response = await fetch(URL, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      setFeedback(data);
+      setShowFeedback(true);
 
-  const generateAIRespopnse = async (user: string, question: string) => {
+      await generateAIResponse(user.email, selectedQuestion);
+    } catch (error) {
+      console.error('Error uploading video file:', error);
+      setFeedback(null);
+      setShowFeedback(false);
+    }
+  };
+
+  const generateAIResponse = async (user: string, question: string) => {
     try {
       const response = await fetch('/service/generate_ai_response', {
         method: 'POST',
@@ -79,21 +74,19 @@ export default function VoiceRecorder ({
 
   const handleToggleRecording = async () => {
     if (!isRecording) {
-      startRecording()
+      startRecording();
     } else {
-      stopRecording()
+      stopRecording();
     }
-  }
+  };
 
   useEffect(() => {
-    if (recordingComplete && audioBlob) {
-      // reset feedback
-      setFeedback(null)
-      handleUpload(audioBlob)
+    if (recordingComplete && videoBlob) {
+      // Reset feedback
+      setFeedback(null);
+      handleUpload(videoBlob);
     }
-  }, [recordingComplete, audioBlob])
-
-  console.log(selectedQuestion)
+  }, [recordingComplete, videoBlob]);
 
   return (
     <div className="flex items-center justify-center h-screen w-full">
@@ -121,17 +114,16 @@ export default function VoiceRecorder ({
                 <p className="mb-0">{transcript}</p>
               </div>
             )}
-            {audioUrl && (
+            {videoUrl && (
               <div className="mt-4">
-                <audio className="w-full" src={audioUrl} controls />
+                <video className="w-full" src={videoUrl} controls />
               </div>
             )}
           </div>
         )}
 
         <div className="flex items-center w-full justify-center mt-6">
-          {isRecording
-            ? (
+          {isRecording ? (
             <button
               onClick={handleToggleRecording}
               className="mt-10 m-auto flex items-center justify-center bg-red-400 hover:bg-red-500 rounded-full w-20 h-20 focus:outline-none"
@@ -147,8 +139,7 @@ export default function VoiceRecorder ({
                 />
               </svg>
             </button>
-              )
-            : (
+          ) : (
             <button
               onClick={handleToggleRecording}
               className="mt-10 m-auto flex items-center justify-center bg-blue-400 hover:bg-blue-500 rounded-full w-20 h-20 focus:outline-none"
@@ -164,7 +155,7 @@ export default function VoiceRecorder ({
                 />
               </svg>
             </button>
-              )}
+          )}
 
           {isLoading && (
             <div className="flex items-center mt-6 space-x-2">
@@ -194,5 +185,5 @@ export default function VoiceRecorder ({
         </div>
       </div>
     </div>
-  )
+  );
 }

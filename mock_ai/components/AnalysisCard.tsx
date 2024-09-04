@@ -3,10 +3,11 @@ interface AnalysisCardProps {
   title: string;
 }
 
-const AnalysisCard = ({ analysis, title }: AnalysisCardProps) => {
+const AnalysisCard = ({ analysis = [], title }: AnalysisCardProps) => {
+  console.log(analysis);
   return (
     <>
-      {analysis &&
+      {analysis.length > 0 ? (
         analysis.map((text, i) => (
           <article
             key={i}
@@ -17,7 +18,10 @@ const AnalysisCard = ({ analysis, title }: AnalysisCardProps) => {
             </h2>
             <p className="p-2 font-sans text-blue-700">{text}</p>
           </article>
-        ))}
+        ))
+      ) : (
+        <p>No analysis available</p>
+      )}
     </>
   );
 };
