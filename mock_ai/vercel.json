@@ -1,22 +1,51 @@
 {
-    "functions": {
-      "api/**": {
-        "excludeFiles": "{.next,*.cache,node_modules,public,app}/**"
-      }
+  "functions": {
+    "api/**": {
+      "memory": 512,
+      "maxDuration": 10,
+      "excludeFiles": "{.next,*.cache,node_modules/**/@types,node_modules/**/*.md,node_modules/**/test,node_modules/**/tests,node_modules/**/examples,public,app}/**"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/auth/(.*)",
+      "dest": "/api/auth/[auth0]"
     },
-  
-    "routes": [
-      {
-        "src": "/api/(.*)",
-        "dest": "/api/auth/[auth0]"
-      },
-      {
-        "src": "/service/(.*)",
-        "dest": "/api/index.py"
-      },
-      {
-        "src": "/(.*)",
-        "dest": "/$1"
-      }
-    ]
-  }
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/service/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)\\.(js|css|png|jpg|svg)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.(html|js|css)",
+      "headers": [
+        {
+          "key": "Content-Encoding",
+          "value": "br"
+        },
+        {
+          "key": "Content-Encoding",
+          "value": "gzip"
+        }
+      ]
+    }
+  ]
+}
