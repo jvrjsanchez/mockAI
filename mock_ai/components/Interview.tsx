@@ -103,7 +103,9 @@ const Interview = () => {
               className={`fade-in ${!stepVisible ? "fade-out" : ""}`}
             >
               <div className="flex flex-col mb-6 text-black">
-                <label>Your Name:</label>
+                <label className="text-white py-2 m-2">
+                  Your Name:
+                </label>
                 <input
                   type="text"
                   value={name}
@@ -125,7 +127,9 @@ const Interview = () => {
               className={`fade-in ${!stepVisible ? "fade-out" : ""}`}
             >
               <div className="flex flex-col mb-6 text-black">
-                <label>Company:</label>
+                <label className="text-white py-2 m-2">
+                  Company:
+                </label>
                 <input
                   type="text"
                   value={company}
@@ -147,7 +151,9 @@ const Interview = () => {
               className={`fade-in ${!stepVisible ? "fade-out" : ""}`}
             >
               <div className="flex flex-col mb-6 text-black">
-                <label>Position:</label>
+                <label className="text-white py-2 m-2">
+                  Position:
+                </label>
                 <input
                   type="text"
                   value={position}
@@ -169,7 +175,9 @@ const Interview = () => {
               className={`fade-in ${!stepVisible ? "fade-out" : ""}`}
             >
               <div className="flex flex-col mb-6 text-black">
-                <label>Question Type:</label>
+                <label className="text-white py-2 m-2">
+                  Question Type:
+                </label>
                 <select
                   value={questionType}
                   onChange={(e) => setQuestionType(e.target.value)}
@@ -193,7 +201,9 @@ const Interview = () => {
               className={`fade-in ${!stepVisible ? "fade-out" : ""}`}
             >
               <div className="flex flex-col mb-6">
-                <label>Recording Type:</label>
+                <label className="text-white py-2 m-2">
+                  Recording Type:
+                </label>
                 <select
                   value={recordingType}
                   onChange={(e) => setRecordingType(e.target.value)}

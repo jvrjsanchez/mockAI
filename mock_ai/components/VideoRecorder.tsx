@@ -1,15 +1,18 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { useVideoRecorder } from '@/hooks/useVideoRecorder';
-import useUploadVideo from '@/hooks/useUploadVideo';
-import { Feedback } from '@/types';
+"use client";
+import { useState, useEffect } from "react";
+import { useVideoRecorder } from "@/hooks/useVideoRecorder";
+import useUploadVideo from "@/hooks/useUploadVideo";
+import { Feedback } from "@/types";
 
 interface VideoRecorderProps {
   selectedQuestion: string;
   user: any;
 }
 
-export default function VideoRecorder({ selectedQuestion, user }: VideoRecorderProps) {
+export default function VideoRecorder({
+  selectedQuestion,
+  user,
+}: VideoRecorderProps) {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
 
@@ -27,18 +30,18 @@ export default function VideoRecorder({ selectedQuestion, user }: VideoRecorderP
 
   const handleUpload = async (videoBlob: Blob) => {
     const formData = new FormData();
-    formData.append('video', videoBlob);
-    formData.append('user', user.email);
-    formData.append('question', selectedQuestion);
+    formData.append("video", videoBlob);
+    formData.append("user", user.email);
+    formData.append("question", selectedQuestion);
 
     const URL =
-      process.env.NODE_ENV === 'production'
+      process.env.NODE_ENV === "production"
         ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/service/upload_video`
-        : 'http://localhost:3001/service/upload_video';
+        : "http://localhost:3001/service/upload_video";
 
     try {
       const response = await fetch(URL, {
-        method: 'POST',
+        method: "POST",
         body: formData,
       });
       const data = await response.json();
@@ -47,18 +50,21 @@ export default function VideoRecorder({ selectedQuestion, user }: VideoRecorderP
 
       await generateAIResponse(user.email, selectedQuestion);
     } catch (error) {
-      console.error('Error uploading video file:', error);
+      console.error("Error uploading video file:", error);
       setFeedback(null);
       setShowFeedback(false);
     }
   };
 
-  const generateAIResponse = async (user: string, question: string) => {
+  const generateAIResponse = async (
+    user: string,
+    question: string
+  ) => {
     try {
-      const response = await fetch('/service/generate_ai_response', {
-        method: 'POST',
+      const response = await fetch("/service/generate_ai_response", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ user, question }),
       });
@@ -68,7 +74,7 @@ export default function VideoRecorder({ selectedQuestion, user }: VideoRecorderP
       }
       setFeedback(data.response);
     } catch (error) {
-      console.error('Error generating AI response:', error);
+      console.error("Error generating AI response:", error);
     }
   };
 
@@ -96,12 +102,12 @@ export default function VideoRecorder({ selectedQuestion, user }: VideoRecorderP
             <div className="flex-1 flex w-full justify-between">
               <div className="space-y-1">
                 <p className="text-sm font-medium leading-none">
-                  {isRecording ? 'Recording' : 'Recorded'}
+                  {isRecording ? "Recording" : "Recorded"}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {isRecording
-                    ? 'What are your thoughts on this question?'
-                    : 'Thank you for your interview.'}
+                    ? "What are your thoughts on this question?"
+                    : "Thank you for your interview."}
                 </p>
               </div>
               {isRecording && (
@@ -111,7 +117,7 @@ export default function VideoRecorder({ selectedQuestion, user }: VideoRecorderP
 
             {transcript && (
               <div className="border rounded-md p-2 h-full mt-4">
-                <p className="mb-0">{transcript}</p>
+                <p className="mb-0 text-black">{transcript}</p>
               </div>
             )}
             {videoUrl && (
