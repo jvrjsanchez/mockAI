@@ -207,7 +207,7 @@ const Interview = () => {
                 <select
                   value={recordingType}
                   onChange={(e) => setRecordingType(e.target.value)}
-                  className="border p-2"
+                  className="border p-2 text-black"
                 >
                   <option value="audio">Audio</option>
                   <option value="video">Video</option>
