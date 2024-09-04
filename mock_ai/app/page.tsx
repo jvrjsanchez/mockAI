@@ -1,10 +1,9 @@
-import { Template } from '@/components'
+import { Template } from "@/components";
 
-export default function Home () {
+export default function Home() {
   return (
-    <main className="overflow-hidden">
+    <main className="overflow-hidden min-h-screen">
       <Template />
     </main>
-  )
+  );
 }
-  
