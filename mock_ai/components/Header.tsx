@@ -48,7 +48,11 @@ const Header = () => {
           className="text-sm font-medium hover:text-[#ff3b9a] transition-colors"
           href="/user_account"
         >
+<<<<<<< Updated upstream
           Account
+=======
+          User Account
+>>>>>>> Stashed changes
         </Link>
       </nav>
     </header>

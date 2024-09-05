@@ -503,6 +503,26 @@ def get_all_results_for_user():
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         return jsonify({'error': str(e)}), 500
+    
+@app.route("/service/delete_result/<int:result_id>", methods=["DELETE"])
+def delete_result(result_id):
+    try:
+        # Find the result by its ID
+        result = Result.query.get(result_id)
+        
+        if not result:
+            return jsonify({"error": "Result not found"}), 404
+        
+        # Delete the result from the database
+        db.session.delete(result)
+        db.session.commit()
+        
+        return jsonify({"message": "Result deleted successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 
 
 if __name__ == "__main__":
