@@ -78,7 +78,7 @@ const UserAccount = () => {
             </h1>
             <p className="text-lg text-center mt-2">{user.email}</p>
             {feedbacks.length > 0 && (
-              <div className="mt-4">
+              <div className="mt-4 text-black">
                 <label
                   htmlFor="feedbackSelect"
                   className="block text-lg font-medium text-gray-700"

@@ -30,7 +30,7 @@ const Results = () => {
             : [response.data]; // If it's an object, convert it to an array
 
           setResults(fetchedResults); // Save fetched results in state
-          console.log('Fetched results:', fetchedResults);
+          console.log("Fetched results:", fetchedResults);
 
           // Fetch AI analysis after fetching results
           fetchAIAnalysis(fetchedResults);
@@ -55,20 +55,26 @@ const Results = () => {
           }
         )
         .then((response) => {
-          const analysisData = typeof response.data.response === 'string'
-            ? [response.data.response]
-            : Array.isArray(response.data.response)
-            ? response.data.response
-            : [];
+          const analysisData =
+            typeof response.data.response === "string"
+              ? [response.data.response]
+              : Array.isArray(response.data.response)
+              ? response.data.response
+              : [];
 
           // Update each result with its corresponding ai_feedback
-          const updatedResults = fetchedResults.map((result, index) => ({
-            ...result,
-            ai_feedback: analysisData[index] || '' // Assign corresponding analysis or empty string
-          }));
+          const updatedResults = fetchedResults.map(
+            (result, index) => ({
+              ...result,
+              ai_feedback: analysisData[index] || "", // Assign corresponding analysis or empty string
+            })
+          );
 
           setResults(updatedResults); // Update the results state with ai_feedback
-          console.log('Updated results with AI feedback:', updatedResults);
+          console.log(
+            "Updated results with AI feedback:",
+            updatedResults
+          );
         })
         .catch((error) => {
           console.error("Error fetching analysis:", error);
@@ -83,15 +89,19 @@ const Results = () => {
 
   const handleSaveResults = () => {
     if (results.length === 0) {
-      alert("No results available to save. Please ensure you have completed the interview.");
-      console.warn('Attempted to save results, but the results array is empty.');
+      alert(
+        "No results available to save. Please ensure you have completed the interview."
+      );
+      console.warn(
+        "Attempted to save results, but the results array is empty."
+      );
       return;
     }
 
     if (saveResults) {
       const payload = {
         user: user?.email,
-        results: results.map(result => ({
+        results: results.map((result) => ({
           question_id: result.question_id,
           question: result.question,
           transcript: result.transcript,
@@ -99,22 +109,22 @@ const Results = () => {
           filler_word_count: result.filler_words,
           long_pauses: result.long_pauses,
           pause_durations: result.pause_durations,
-          ai_feedback: result.ai_feedback || '' // Include ai_feedback
-        }))
+          ai_feedback: result.ai_feedback || "", // Include ai_feedback
+        })),
       };
 
-      console.log('Saving results payload:', payload);
+      console.log("Saving results payload:", payload);
 
       axios
-        .post('/service/save_results', payload)
+        .post("/service/save_results", payload)
         .then(() => {
-          alert('Results saved successfully.');
+          alert("Results saved successfully.");
         })
         .catch((error) => {
-          console.error('Error saving results:', error);
+          console.error("Error saving results:", error);
         });
     } else {
-      console.log('Save results is not enabled.');
+      console.log("Save results is not enabled.");
     }
   };
 
@@ -153,11 +163,14 @@ const Results = () => {
           </h1>
           {results.length > 0 ? (
             results.map((result, index) => (
-              <div key={index} className="result-card">
-                <h2 className="text-xl font-bold">{result.question}</h2>
-                <p>
-                  <strong>Score:</strong> {result.score}
-                </p>
+              <div
+                key={index}
+                className="result-card text-black p-2 m-2"
+              >
+                <h2 className="text-xl font-bold">
+                  {result.question}
+                </h2>
+
                 <p>
                   <strong>Transcript:</strong> {result.transcript}
                 </p>
@@ -175,9 +188,6 @@ const Results = () => {
                   <strong>Interview Date:</strong>{" "}
                   {result.interview_date}
                 </p>
-                <p>
-                  <strong>AI Feedback:</strong> {result.ai_feedback}
-                </p>
               </div>
             ))
           ) : (
@@ -190,7 +200,7 @@ const Results = () => {
           )}
           <AnalysisCard
             title="Mock AI Analysis"
-            analysis={results.map(result => result.ai_feedback)}
+            analysis={results.map((result) => result.ai_feedback)}
           />
           <div className="flex items-center mt-4">
             <label className="mr-2 text-lg font-medium">

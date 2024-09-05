@@ -9,7 +9,7 @@ const Header = () => {
 
   return (
     <header className="px-4 lg:px-6  flex items-center">
-      <Link className="flex items-center justify-center" href="#">
+      <Link className="flex items-center justify-center" href="/">
         <Image
           className="rounded-lg shadow-lg bg-white z-10 m-1 w-20 h-16 sm:w-24 sm:h-20"
           src="/mockAILogo.jpeg"
@@ -43,6 +43,12 @@ const Header = () => {
           href="#"
         >
           Contact
+        </Link>
+        <Link
+          className="text-sm font-medium hover:text-[#ff3b9a] transition-colors"
+          href="/user_account"
+        >
+          Account
         </Link>
       </nav>
     </header>
