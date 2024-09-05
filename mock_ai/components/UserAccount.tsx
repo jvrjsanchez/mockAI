@@ -68,123 +68,6 @@ const UserAccount = () => {
             <option value="desc">Newest to Oldest</option>
           </select>
         </div>
-<<<<<<< Updated upstream
-      </div>
-    );
-  } else {
-    return (
-      <div className="hero">
-        <div className="flex-1 pt-36 padding-x">
-          <h1 className="text-2xl font-bold">
-            mockAI User Account Page
-          </h1>
-        </div>
-        <div className="flex-1 bg-white pt-36 padding-x rounded-lg shadow-md">
-          <>
-            <img
-              src={user.picture}
-              alt={user.name}
-              className="rounded-full h-24 w-24 mx-auto"
-            />
-            <h1 className="text-2xl font-bold text-center mt-4">
-              {user.name}
-            </h1>
-            <p className="text-lg text-center mt-2">{user.email}</p>
-            {feedbacks.length > 0 && (
-              <div className="mt-4 text-black">
-                <label
-                  htmlFor="feedbackSelect"
-                  className="block text-lg font-medium text-gray-700"
-                >
-                  Select Previous Feedback
-                </label>
-                <select
-                  id="feedbackSelect"
-                  name="feedback"
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                  onChange={handleFeedbackChange}
-                  value={selectedFeedback?.id || ""}
-                >
-                  {feedbacks.map((feedback) => (
-                    <option key={feedback.id} value={feedback.id}>
-                      {feedback.interview_date || feedback.question}
-                    </option>
-                  ))}
-                </select>
-                {selectedFeedback && (
-                  <div className="mt-4">
-                    <label
-                      htmlFor="feedbackSelect"
-                      className="block text-lg font-medium text-gray-700"
-                    >
-                      Select Previous Feedback
-                    </label>
-                    <select
-                      id="feedbackSelect"
-                      name="feedback"
-                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                      onChange={handleFeedbackChange}
-                      value={selectedFeedback?.id || ""}
-                    >
-                      {feedbacks.map((feedback) => (
-                        <option key={feedback.id} value={feedback.id}>
-                          {feedback.question} - Score:{" "}
-                          {feedback.score} - Date:{" "}
-                          {feedback.interview_date}
-                        </option>
-                      ))}
-                    </select>
-                    {selectedFeedback && (
-                      <div className="mt-4">
-                        <h2 className="text-xl font-bold">
-                          {selectedFeedback.interview_date}
-                        </h2>
-                        <p>
-                          <strong>Score:</strong>{" "}
-                          {selectedFeedback.score}
-                        </p>
-                        <p>
-                          <strong>Transcript:</strong>{" "}
-                          {selectedFeedback.transcript}
-                        </p>
-                        <p>
-                          <strong>Filler Words:</strong>{" "}
-                          {selectedFeedback.filler_words}
-                        </p>
-                        <p>
-                          <strong>Long Pauses:</strong>{" "}
-                          {selectedFeedback.long_pauses}
-                        </p>
-                        <p>
-                          <strong>Pause Durations:</strong>{" "}
-                          {selectedFeedback.pause_durations}
-                        </p>
-                        <p>
-                          <strong>AI Feedback:</strong>{" "}
-                          {selectedFeedback.ai_feedback}
-                        </p>
-                        <p>
-                          <strong>Interview Date:</strong>{" "}
-                          {selectedFeedback.interview_date}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-                <div className="flex flex-col space-y-4 mt-6">
-                  <Link
-                    href="/interview"
-                    className="bg-primary-blue text-white rounded-full py-2 text-center"
-                  >
-                    Start Your Interview
-                  </Link>
-                  <a
-                    href="/api/auth/logout"
-                    className="bg-primary-blue text-white rounded-full py-2 text-center"
-                  >
-                    Sign Out
-                  </a>
-=======
         {results.length > 0 ? (
           results.map((result) => (
             <div key={result.id} className="result-card mt-4 p-4 border rounded-md">
@@ -215,7 +98,6 @@ const UserAccount = () => {
                     <source src={result.video_url} type="video/mp4" />
                     Your browser does not support the video tag.
                   </video>
->>>>>>> Stashed changes
                 </div>
               ) : (
                 <p>No video available for this interview.</p>
