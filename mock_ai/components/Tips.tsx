@@ -12,7 +12,7 @@ export default function Tips() {
           </p>
         </section>
 
-        <div className="grid gap-10 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mb-8 mt-8 grid gap-10 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           <div className="bg-green-100 border-l-4 border-green-500 p-4 rounded-lg shadow-md">
             <h3 className="font-semibold text-green-800">Stay Positive</h3>
             <p>
@@ -46,7 +46,7 @@ export default function Tips() {
             
               <video id="video-player" playsInline controls className="max-h-screen rounded-lg bg-black mx-auto h-4/6 my-5" src="/mockai_vid.mp4"/>
               <div className="flex justify-center">
-              <ul className="emojis flex justify-center rounded-full bg-gray-200 dark:bg-gray-800 shadow-[8px_8px_16px_#d6d6d6,-8px_-8px_16px_#fcfcfc] dark:shadow-[8px_8px_16px_#151a23,-8px_-8px_16px_#1d232f] w-1/12  ">
+              <ul className="emojis flex justify-center rounded-full bg-gray-200 dark:bg-gray-800 shadow-[8px_8px_16px_#d6d6d6,-8px_-8px_16px_#fcfcfc] dark:shadow-[8px_8px_16px_#151a23,-8px_-8px_16px_#1d232f] w3/12  ">
                 <li>
                   <button className="emoji-btn mx-auto w-16 h-16 bg-transparent mx-1 text-3xl text-center rounded-full border-4 border-transparent transform transition-all duration-150 ease-in-out focus:outline-none hover:scale-110 hover:border-orange-400 hover:bg-white/40 active:scale-90" data-id="star">🌟</button>
                 </li>

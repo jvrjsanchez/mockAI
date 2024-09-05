@@ -50,7 +50,7 @@ export default function Team() {
                 <img
                     style={{ width: '200px', height: '200px' }} // Adjust these values as needed
                     className="rounded-full mx-auto mb-4"
-                    src="/profile_pics/wesley.jpeg"
+                    src="/profile_pics/wesley2.png"
                     alt="Wesley Brown"
                 />
 
