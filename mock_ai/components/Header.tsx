@@ -22,27 +22,15 @@ const Header = () => {
       <nav className="ml-auto flex gap-4 sm:gap-6">
         <Link
           className="text-sm font-medium hover:text-[#ff3b9a] transition-colors"
-          href="#"
+          href="/tips"
         >
-          Features
+          Tips
         </Link>
         <Link
           className="text-sm font-medium hover:text-[#ff3b9a] transition-colors"
-          href="#"
-        >
-          Pricing
-        </Link>
-        <Link
-          className="text-sm font-medium hover:text-[#ff3b9a] transition-colors"
-          href="#"
+          href="/about"
         >
           About
-        </Link>
-        <Link
-          className="text-sm font-medium hover:text-[#ff3b9a] transition-colors"
-          href="#"
-        >
-          Contact
         </Link>
         <Link
           className="text-sm font-medium hover:text-[#ff3b9a] transition-colors"
