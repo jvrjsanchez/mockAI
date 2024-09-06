@@ -4,8 +4,11 @@
       "excludeFiles": "{.next,*.cache,node_modules,public,app}/**"
     }
   },
-
   "routes": [
+    {
+      "src": "/api/saveUser",
+      "dest": "/api/saveUser"
+    },
     {
       "src": "/api/(.*)",
       "dest": "/api/auth/[auth0]"
