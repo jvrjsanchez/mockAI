@@ -111,7 +111,7 @@ const UserAccount = () => {
             onChange={(e) =>
               handleSortChange(e.target.value as "asc" | "desc")
             }
-            className="border p-2 rounded-md text-black"
+            className="border p-2 rounded-md"
           >
             <option value="asc">Oldest to Newest</option>
             <option value="desc">Newest to Oldest</option>
@@ -120,7 +120,7 @@ const UserAccount = () => {
 
         {/* Display results */}
         {results.length > 0 ? (
-          <div className="space-y-4 mt-4 text-black">
+          <div className="space-y-4 mt-4">
             {results.map((result) => (
               <div
                 key={result.id}
@@ -165,39 +165,6 @@ const UserAccount = () => {
                     <p>No video available for this interview.</p>
                   )}
                 </div>
-          results.map((result) => (
-            <div key={result.id} className="result-card mt-4 p-4 border rounded-md">
-              <h2 className="text-xl font-bold">{result.question}</h2>
-              <p>
-                <strong>Score:</strong> {result.score}
-              </p>
-              <p>
-                <strong>Transcript:</strong> {result.transcript}
-              </p>
-              <p>
-                <strong>Filler Words:</strong> {result.filler_words}
-              </p>
-              <p>
-                <strong>Long Pauses:</strong> {result.long_pauses}
-              </p>
-              <p>
-                <strong>Pause Durations:</strong> {result.pause_durations}
-              </p>
-              <p>
-                <strong>Interview Date:</strong> {new Date(result.interview_date).toLocaleString()}
-              </p>
-              
-              {/* Display video player if video_url is available */}
-              {result.video_url ? (
-                <div className="mt-4">
-                  <video width="100%" controls>
-                    <source src={result.video_url} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                </div>
-              ) : (
-                <p>No video available for this interview.</p>
-              )}
 
                 {/* Delete button */}
                 <button
