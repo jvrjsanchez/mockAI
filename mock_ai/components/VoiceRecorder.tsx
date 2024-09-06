@@ -118,7 +118,7 @@ export default function VoiceRecorder ({
 
             {transcript && (
               <div className="border rounded-md p-2 h-full mt-4">
-                <p className="mb-0">{transcript}</p>
+                <p className="mb-0 text-black">{transcript}</p>
               </div>
             )}
             {audioUrl && (
