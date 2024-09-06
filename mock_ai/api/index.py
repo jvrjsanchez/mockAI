@@ -1,5 +1,4 @@
 from .extensions import db
-from moviepy.editor import VideoFileClip
 from flask import request, jsonify, session
 import requests
 from sqlalchemy import desc
@@ -69,11 +68,21 @@ def generate_feedback_prompt(name, company, position, interview_type, question):
         "but remember, many job seekers have interview anxiety. The goal of this feedback is not to be too harsh, "
         "but give brief feedback where {name} can improve. Give a brief feedback on this {interview_type} response of {name} answering the question "
         "'{question}'."
-        "Give them a made-up score from a scale of 60 to 100. Thank {name} for their answer, "
+        "Give them an unbiased score from a scale of 60 to 100 based on the accuracy of their {interview_type} response. Thank {name} for their answer, "
         "and sign your name as 'MockAI'. DO NOT include any markdown in your response. "
         "Encourage {name} to keep coming back to MockAI to practice their interviewing skills."
     ).format(name=name, company=company, position=position, interview_type=interview_type, question=question)
 
+@app.route('/api/get_blob_token', methods=['GET'])
+def get_blob_token():
+    try:
+        blob_token = os.getenv('BLOB_READ_WRITE_TOKEN')
+        if not blob_token:
+            return jsonify({'error': 'Blob token not found'}), 404
+        return jsonify({'token': blob_token}), 200
+    except Exception as e:
+        logging.error(f"Error getting blob token: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route("/service/upload_audio", methods=["POST"])
 def upload_audio():
@@ -163,102 +172,35 @@ def upload_audio():
         logging.error(f"Exception occurred: {e}\n{stack_trace}")
         return jsonify({"error": "An internal error occurred. Please try again later."}), 500
 
-
-@app.route("/service/upload_video", methods=["POST"])
-def upload_video():
-    if "video" not in request.files:
-        return jsonify({"error": "No video file provided"}), 400
-    elif "user" not in request.form or "question" not in request.form:
-        return jsonify({"error": "User and question are required"}), 400
-
-    user_email = request.form.get("user")
-    question = request.form.get("question")
-
-    VIDEO_URL = None
-
+@app.route("/service/save_video_url", methods=["POST"])
+def save_video_url():
     try:
-        video_file = request.files["video"]
-        video_path = "/tmp/uploaded_video.mp4"
-        video_file.save(video_path)
+        data = request.get_json()
+        user_email = data.get("user")
+        video_url = data.get("video_url")
+        user = user_email
 
-        # Extract audio using moviepy
-        audio_path = "/tmp/extracted_audio.wav"
-        video_clip = VideoFileClip(video_path)
-        video_clip.audio.write_audiofile(audio_path)
+        if not user_email or not video_url:
+            return jsonify({"error": "User and video URL are required"}), 400
+        
+        logging.info(f"Received video URL: {video_url}")
 
-        # Transcribe the extracted audio using Deepgram
-        with open(audio_path, 'xb') as audio_file:
-            audio_buffer = audio_file.read()
-
-        options = PrerecordedOptions(
-            model="nova-2",
-            smart_format=True,
-            punctuate=True,
-            filler_words=True,
-            utterances=True,
-            utt_split=10000,
-        )
-
-        if IS_PRODUCTION:
-            buffer_data = vercel_blob.put(
-                "extracted_audio.wav",
-                audio_buffer,
-                {
-                    "addRandomSuffix": "false",
-                },
-            )
-            AUDIO_URL = {"url": buffer_data.get("url")}
-
-            response = deepgram.listen.prerecorded.v("1").transcribe_url(
-                AUDIO_URL, options
-            )
-        else:
-            payload: FileSource = {
-                "buffer": audio_buffer,
-            }
-            response = deepgram.listen.prerecorded.v("1").transcribe_file(
-                payload, options
-            )
-
-        userObject = User.query.filter_by(email=user_email).first()
-
-        if userObject is None:
+        user_record = User.query.filter_by(email=user).first()
+        if not user_record:
             return jsonify({"error": "User not found"}), 404
 
-        userId = userObject.id
-
-        analysis_results = analyze_audio(response)
-
-        long_pauses, pause_durations, transcript, filler_word_count_json = (
-            extract_analysis_results(analysis_results)
-        )
-
-        new_result = Result(
-            user_id=userId,
-            question_id=1,  # Update with actual question ID
-            question=question,
-            # Assuming video will be uploaded to cloud storage
-            video_url=VIDEO_URL["url"] if VIDEO_URL else None,
-            transcript=transcript,
-            # Optionally save the audio URL
-            audio_url=AUDIO_URL["url"] if AUDIO_URL else audio_path,
-            filler_words=filler_word_count_json,
-            long_pauses=long_pauses,
-            interview_date=datetime.utcnow(),
-            pause_durations=(
-                0 if len(pause_durations) == 0 else json.dumps(pause_durations)
-            ),
-        )
-        db.session.add(new_result)
-        db.session.commit()
-
-        return jsonify(analysis_results)
-
+        userId = user_record.id
+        last_updated_result = Result.query.filter_by(
+            user_id=userId).order_by(desc(Result.updated_at)).first()
+        if last_updated_result:
+            last_updated_result.video_url = video_url
+            db.session.commit()
+            return jsonify({"message": "Video successfully uploaded to the database"}), 201
+        else:
+            return jsonify({"message": "No video has been added to the database"}), 404
     except Exception as e:
-        stack_trace = traceback.format_exc()
-        logging.error(f"Error processing video: {e}\n{stack_trace}")
-        return jsonify({"error": "An internal error occurred. Please try again later."}), 500
-
+        logging.error(f"Error saving video URL: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/service/generate_ai_response', methods=['POST'])
 def generate_ai_response():
@@ -392,6 +334,8 @@ def generate_interview_question():
         company = request.args.get("company")
         position = request.args.get("position")
         interview_type = request.args.get("interview_type")
+
+        print(f"Name: {name}, Company: {company}, Position: {position}, Interview Type: {interview_type}")
 
         prompt = generate_interview_prompt(
             name, company, position, interview_type)
