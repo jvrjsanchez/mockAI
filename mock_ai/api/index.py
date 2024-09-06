@@ -15,7 +15,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import google.generativeai as genai
 from api.genai_utils import text_prompt_for_question, prompt_with_audio_file
-from api.audio_analysis import analyze_audio
+from api.audio_analysis import analyze_audio, extract_score_from_gemini_response
 from api.models import User, Question, Result
 from api.genai_utils import prompt_with_audio_file, extract_analysis_results
 
@@ -63,15 +63,15 @@ def generate_interview_prompt(name, company, position, interview_type):
 
 def generate_feedback_prompt(name, company, position, interview_type, question):
     return (
-        "You are an interview feedback analysis for a website called 'MockAI'. {name} has applied for the position of {position} at {company}. "
-        "Job seekers submit their {interview_type} responses to questions, and your job is to help them improve, "
-        "but remember, many job seekers have interview anxiety. The goal of this feedback is not to be too harsh, "
-        "but give brief feedback where {name} can improve. Give a brief feedback on this {interview_type} response of {name} answering the question "
-        "'{question}'."
-        "Give them an unbiased score from a scale of 60 to 100 based on the accuracy of their {interview_type} response. Thank {name} for their answer, "
-        "and sign your name as 'MockAI'. DO NOT include any markdown in your response. "
-        "Encourage {name} to keep coming back to MockAI to practice their interviewing skills."
+        "You are an interview feedback analyst for a website called 'MockAI'. {name} has applied for the position of {position} at {company}. "
+        "Job seekers submit their {interview_type} responses to questions, and your job is to help them improve. "
+        "However, remember that many job seekers experience interview anxiety, so keep the feedback constructive and not too harsh. "
+        "Give brief feedback where {name} can improve based on this {interview_type} response to the question: '{question}'. "
+        "Provide an unbiased score on a scale of 60 to 100, in this exact format: 'Score: [score]'. "
+        "Afterward, thank {name} for their response, sign your name as 'MockAI', and encourage {name} to return to MockAI to keep practicing their interview skills. "
+        "DO NOT include any markdown in your response."
     ).format(name=name, company=company, position=position, interview_type=interview_type, question=question)
+
 
 @app.route('/api/get_blob_token', methods=['GET'])
 def get_blob_token():
@@ -83,6 +83,7 @@ def get_blob_token():
     except Exception as e:
         logging.error(f"Error getting blob token: {e}")
         return jsonify({'error': str(e)}), 500
+
 
 @app.route("/service/upload_audio", methods=["POST"])
 def upload_audio():
@@ -172,6 +173,7 @@ def upload_audio():
         logging.error(f"Exception occurred: {e}\n{stack_trace}")
         return jsonify({"error": "An internal error occurred. Please try again later."}), 500
 
+
 @app.route("/service/save_video_url", methods=["POST"])
 def save_video_url():
     try:
@@ -182,7 +184,7 @@ def save_video_url():
 
         if not user_email or not video_url:
             return jsonify({"error": "User and video URL are required"}), 400
-        
+
         logging.info(f"Received video URL: {video_url}")
 
         user_record = User.query.filter_by(email=user).first()
@@ -201,6 +203,7 @@ def save_video_url():
     except Exception as e:
         logging.error(f"Error saving video URL: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/service/generate_ai_response', methods=['POST'])
 def generate_ai_response():
@@ -258,6 +261,11 @@ def generate_ai_response():
         prompt = generate_feedback_prompt(
             name, company, position, interview_type, question)
         gemini_response = prompt_with_audio_file(audio_content, prompt)
+
+        logging.info(f"Received response from Gemini: {gemini_response}")
+
+        score = extract_score_from_gemini_response(gemini_response["response"])
+        print(f"Extracted score: {score}")
 
         if gemini_response:
             result.ai_feedback = gemini_response
@@ -335,7 +343,8 @@ def generate_interview_question():
         position = request.args.get("position")
         interview_type = request.args.get("interview_type")
 
-        print(f"Name: {name}, Company: {company}, Position: {position}, Interview Type: {interview_type}")
+        print(
+            f"Name: {name}, Company: {company}, Position: {position}, Interview Type: {interview_type}")
 
         prompt = generate_interview_prompt(
             name, company, position, interview_type)
@@ -447,26 +456,26 @@ def get_all_results_for_user():
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         return jsonify({'error': str(e)}), 500
-    
+
+
 @app.route("/service/delete_result/<int:result_id>", methods=["DELETE"])
 def delete_result(result_id):
     try:
         # Find the result by its ID
         result = Result.query.get(result_id)
-        
+
         if not result:
             return jsonify({"error": "Result not found"}), 404
-        
+
         # Delete the result from the database
         db.session.delete(result)
         db.session.commit()
-        
+
         return jsonify({"message": "Result deleted successfully"}), 200
 
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-
 
 
 if __name__ == "__main__":

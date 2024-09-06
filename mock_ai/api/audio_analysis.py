@@ -1,3 +1,4 @@
+import re
 
 
 def analyze_audio(response):
@@ -25,3 +26,10 @@ def analyze_audio(response):
     }
 
     return result
+
+
+def extract_score_from_gemini_response(response):
+    match = re.search(r"Score:\s*(\d+)", response)
+    if match:
+        return int(match.group(1))
+    return None
