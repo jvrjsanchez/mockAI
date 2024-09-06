@@ -6,24 +6,22 @@ export async function middleware(req: NextRequest) {
 
   try {
     const { user } = (await getSession(req, res)) || {};
-    const URL = process.env.NEXT_PUBLIC_VERCEL_URL
+    const baseUrl =
+      process.env.NODE_ENV === "production"
+        ? process.env.NEXT_PUBLIC_VERCEL_URL
+        : "http://localhost:3001";
 
     if (user) {
-      const response = await fetch(
-        process.env.NEXT_PUBLIC_VERCEL_URL
-        ? "/service/add_user"
-        : "http://localhost:3001/service/add_user",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          cache: "force-cache",
-          body: JSON.stringify({
-            email: user.email,
-          }),
-        }
-      );
+      const response = await fetch(`${baseUrl}/service/add_user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "force-cache",
+        body: JSON.stringify({
+          email: user.email,
+        }),
+      });
 
       const responseFromFlask = await response.json();
 
