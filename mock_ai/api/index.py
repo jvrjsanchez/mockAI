@@ -5,8 +5,10 @@ from sqlalchemy import desc
 from sqlalchemy.exc import SQLAlchemyError
 import os
 import io
+from moviepy.editor import VideoFileClip
 import traceback
 import json
+import random
 from datetime import datetime
 import logging
 import vercel_blob
@@ -17,7 +19,7 @@ import google.generativeai as genai
 from api.genai_utils import text_prompt_for_question, prompt_with_audio_file
 from api.audio_analysis import analyze_audio, extract_score_from_gemini_response
 from api.models import User, Question, Result
-from api.genai_utils import prompt_with_audio_file, extract_analysis_results
+from api.genai_utils import prompt_with_audio_file, extract_analysis_results, sanitize_question
 
 
 # https://github.com/orgs/vercel/discussions/6837
@@ -264,20 +266,32 @@ def generate_ai_response():
 
         logging.info(f"Received response from Gemini: {gemini_response}")
 
-        score = extract_score_from_gemini_response(gemini_response["response"])
-        print(f"Extracted score: {score}")
+        if isinstance(gemini_response, str):
+            logging.info(f"Response text: {gemini_response}")
+            extracted_data = extract_score_from_gemini_response(
+                gemini_response)
+            score = extracted_data["score"]
+            if score is not None:
+                logging.info(f"Extracted score: {score}")
+                result.score = score
+            else:
+                logging.warning("No score extracted from the response")
 
-        if gemini_response:
-            result.ai_feedback = gemini_response
             db.session.commit()
             return jsonify({"response": gemini_response})
         else:
-            return jsonify({"error": "No response from Gemini"}), 500
+            logging.error("Response text is not a string")
+            if 'error' in gemini_response and '429' in gemini_response['error']:
+                return jsonify({'response': 'Something went wrong. Our AI cannot analyze your answer right now. Please try again later.'}), 429
+            return jsonify({"error": "Invalid response format from Gemini"}), 500
 
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         db.session.rollback()
+        if "429" in str(e):
+            return jsonify({"error": "Something went wrong. Our AI cannot analyze your answer right now. Please try again later."}), 429
         return jsonify({"error": str(e)}), 500
+######
 
 
 @app.route("/service/health", methods=["GET"])
@@ -362,6 +376,17 @@ def generate_interview_question():
     except Exception as e:
         db.session.rollback()
         logging.error(f"Exception: {e}")
+        if "429" in str(e):  # fall back in case quota for gemini is reached.
+            logging.info("429 falling back to random question from database.")
+            random_question = Question.query.order_by(
+                db.func.random()).first()
+            if random_question:
+                sanitized_question = sanitize_question(
+                    random_question.question, name, company, position)
+                return sanitized_question
+
+            else:
+                return jsonify({"error": "No questions available in the database"}), 500
         return jsonify({"error": str(e)}), 500
 
 
@@ -407,6 +432,8 @@ def save_results():
                 pause_durations=result.get("pause_durations"),
                 score=result.get("score"),
                 interview_date=datetime.utcnow(),
+                ai_feedback=result.get("ai_feedback"),
+                updated_at=datetime.utcnow()
             )
             db.session.add(new_result)
 
