@@ -40,7 +40,7 @@ def extract_score_from_gemini_response(response):
     dict: A dictionary containing the extracted score and the original response text.
     """
     try:
-        match = re.search(r"Score:\s*(\d+)", response)
+        match = re.search(r"Here is your score based on our assessment:\s*(\d+)", response)
         if match:
             score = int(match.group(1))
             logging.info(f"Extracted score: {score}")

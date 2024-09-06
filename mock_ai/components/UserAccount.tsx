@@ -104,7 +104,7 @@ const UserAccount = () => {
         <h1 className="text-2xl font-bold mt-8">Your Interview Results</h1>
 
         {/* Sort by Date */}
-        <div className="flex items-center justify-between mt-4">
+        <div className="flex items-center justify-between mt-4 text-black">
           <p>Sort by Date:</p>
           <select
             value={sortBy}
@@ -120,7 +120,7 @@ const UserAccount = () => {
 
         {/* Display results */}
         {results.length > 0 ? (
-          <div className="space-y-4 mt-4">
+          <div className="space-y-4 mt-4 text-black">
             {results.map((result) => (
               <div
                 key={result.id}
