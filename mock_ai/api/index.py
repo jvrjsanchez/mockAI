@@ -5,7 +5,6 @@ from sqlalchemy import desc
 from sqlalchemy.exc import SQLAlchemyError
 import os
 import io
-from moviepy.editor import VideoFileClip
 import traceback
 import json
 import random
@@ -252,8 +251,8 @@ def generate_ai_response():
 
         if result.video_url:
             audio_path = '/tmp/extracted_audio.wav'
-            video_clip = VideoFileClip(file_path)
-            video_clip.audio.write_audiofile(audio_path)
+            # video_clip = VideoFileClip(file_path) # currently commented out because we are not using moviepy.
+            # video_clip.audio.write_audiofile(audio_path)
             file_path = audio_path
 
         with open(file_path, 'rb') as audio_file:
