@@ -1,4 +1,5 @@
 import re
+import logging
 
 
 def analyze_audio(response):
@@ -29,7 +30,24 @@ def analyze_audio(response):
 
 
 def extract_score_from_gemini_response(response):
-    match = re.search(r"Score:\s*(\d+)", response)
-    if match:
-        return int(match.group(1))
-    return None
+    """
+    Extracts the score from the Gemini response text.
+
+    Parameters:
+    response (str): The response text from Gemini.
+
+    Returns:
+    dict: A dictionary containing the extracted score and the original response text.
+    """
+    try:
+        match = re.search(r"Score:\s*(\d+)", response)
+        if match:
+            score = int(match.group(1))
+            logging.info(f"Extracted score: {score}")
+            return {"score": score, "response": response}
+        else:
+            logging.warning("No score found in the response")
+            return {"score": None, "response": response}
+    except Exception as e:
+        logging.error(f"An error occurred while extracting the score: {e}")
+        return {"score": None, "response": response}

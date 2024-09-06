@@ -2,6 +2,10 @@ import json
 import os
 import google.generativeai as genai
 import logging
+import re
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 PROMPT_TO_AI = os.getenv("PROMPT_TO_AI")
@@ -48,6 +52,8 @@ def prompt_with_audio_file(audio_content, prompt):
 
         # Use the prompt and the path from the file API to generate the content from the model
         response = model.generate_content([prompt, path_from_file_api])
+
+        logging.info(f"Generated response: {type(response.text)}")
 
         return response.text
 
@@ -123,3 +129,25 @@ def ai_sys_instruction(question: str) -> str:
     """
 
     return f"You are an interview feedback analysis for a website called 'MockAI'. Job seekers submit their audio response to questions and your job is to help them improve, but remember, many job seekers have interview anxiety. The goal of this feedback is not to be too harsh, but give brief feedback where the job seeker can improve. Give a brief feedback on this audio response of an interviewee answering this question: {question} count how many filler words they used. list the filler words out. Give their longest pause in seconds if the pause is greater than 10 seconds. Give th em a made up score out of 10. Thank them for their answer, and sign your name as 'MockAI'. DO NOT include any markdown in your response. Encourage them to keep coming back to MockAI to practice their interviewing skills. Address them by their name if you understood it. If you didn't understand their name, address them as 'interviewee'. Send reponse in plain text format."
+
+
+def sanitize_question(question, name, company, position):
+    """
+    Sanitizes the question by replacing the name, company, and position with generic terms if the AI is down. It is supposed to replace the personalized part of the question with incoming user data.
+    Parameters: 
+    question (str): The question to be sanitized.
+    name (str): The name of the candidate.
+    company (str): The name of the company.
+    position (str): The name of the position.
+    Returns:
+    str: The sanitized question.
+
+    """
+
+    question = re.sub(re.escape(name), 'Candidate',
+                      question, flags=re.IGNORECASE)
+    question = re.sub(re.escape(company), 'the company',
+                      question, flags=re.IGNORECASE)
+    question = re.sub(re.escape(position), 'the position',
+                      question, flags=re.IGNORECASE)
+    return question
