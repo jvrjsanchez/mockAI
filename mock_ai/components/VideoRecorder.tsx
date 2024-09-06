@@ -1,98 +1,49 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useVideoRecorder } from "@/hooks/useVideoRecorder";
-import useUploadVideo from "@/hooks/useUploadVideo";
-import { Feedback } from "@/types";
 
-interface VideoRecorderProps {
+interface VoiceRecorderProps {
   selectedQuestion: string;
   user: any;
+  onRecordingComplete: () => void;
 }
 
-export default function VideoRecorder({
+export default function VoiceRecorder({
   selectedQuestion,
   user,
-}: VideoRecorderProps) {
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
-  const [showFeedback, setShowFeedback] = useState(false);
-
+  onRecordingComplete,
+}: VoiceRecorderProps) {
   const {
     isRecording,
-    recordingComplete,
-    videoUrl,
-    transcript,
     startRecording,
     stopRecording,
-    videoBlob,
+    videoUrl,
+    uploadedVideoUrl,
+    saveVideoUrl,
+    uploadAudio,
+    transcript,
   } = useVideoRecorder();
-
-  const { isLoading } = useUploadVideo();
-
-  const handleUpload = async (videoBlob: Blob) => {
-    const formData = new FormData();
-    formData.append("video", videoBlob);
-    formData.append("user", user.email);
-    formData.append("question", selectedQuestion);
-
-    const URL =
-      process.env.NODE_ENV === "production"
-        ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/service/upload_video`
-        : "http://localhost:3001/service/upload_video";
-
-    try {
-      const response = await fetch(URL, {
-        method: "POST",
-        body: formData,
-      });
-      const data = await response.json();
-      setFeedback(data);
-      setShowFeedback(true);
-
-      await generateAIResponse(user.email, selectedQuestion);
-    } catch (error) {
-      console.error("Error uploading video file:", error);
-      setFeedback(null);
-      setShowFeedback(false);
-    }
-  };
-
-  const generateAIResponse = async (
-    user: string,
-    question: string
-  ) => {
-    try {
-      const response = await fetch("/service/generate_ai_response", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ user, question }),
-      });
-      const data = await response.json();
-      if (data.error) {
-        throw new Error(data.error);
-      }
-      setFeedback(data.response);
-    } catch (error) {
-      console.error("Error generating AI response:", error);
-    }
-  };
-
-  const handleToggleRecording = async () => {
-    if (!isRecording) {
-      startRecording();
-    } else {
-      stopRecording();
-    }
-  };
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (recordingComplete && videoBlob) {
-      // Reset feedback
-      setFeedback(null);
-      handleUpload(videoBlob);
+    if (uploadedVideoUrl) {
+      onRecordingComplete();
     }
-  }, [recordingComplete, videoBlob]);
+  }, [uploadedVideoUrl]);
+
+  const handleToggleRecording = async () => {
+    if (isRecording) {
+      setIsLoading(true);
+      stopRecording();
+
+      // Wait until videoBlob and audioBlob are ready before uploading
+      await saveVideoUrl(); // Save video URL after stopping recording
+      await uploadAudio(); // Upload extracted audio
+      setIsLoading(false);
+    } else {
+      startRecording();
+    }
+  };
 
   return (
     <div className="flex items-center justify-center h-screen w-full">

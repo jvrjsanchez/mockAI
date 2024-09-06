@@ -1,11 +1,10 @@
 "use client";
 import { useUser } from '@auth0/nextjs-auth0/client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 import AnalysisCard from './AnalysisCard';
-
-const ffmpeg = createFFmpeg({ log: true });
+import VoiceRecorder from './VoiceRecorder';
+import VideoRecorder from './VideoRecorder';
 
 const Interview = () => {
   const { user, error, isLoading } = useUser();
@@ -18,11 +17,6 @@ const Interview = () => {
   const [recordingType, setRecordingType] = useState<'audio' | 'video'>('audio');
   const [isQuestionAnswered, setIsQuestionAnswered] = useState(false);
   const [stepVisible, setStepVisible] = useState(true);
-  const [processing, setProcessing] = useState(false);
-
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const recordedChunksRef = useRef<Blob[]>([]);
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -31,6 +25,12 @@ const Interview = () => {
       const response = await axios.get(
         baseUrl ? `${baseUrl}/service/generate_interview_question` : "/service/generate_interview_question",
         {
+          params: {
+            name,
+            company,
+            position,
+            interview_type: questionType,
+          },
           headers: { "Content-Type": "application/json" },
         }
       );
@@ -51,97 +51,7 @@ const Interview = () => {
     setTimeout(() => {
       setStep(step + 1);
       setStepVisible(true);
-    }, 500); 
-  };
-
-  // Function to load FFmpeg
-  const loadFFmpeg = async () => {
-    await ffmpeg.load();
-  };
-
-  const startVideoRecording = async () => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert("Your browser does not support video recording.");
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-
-      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'video/webm' });
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          recordedChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorderRef.current.start();
-    } catch (error) {
-      console.error("Error starting video recording:", error);
-    }
-  };
-
-  const stopVideoRecording = async () => {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-      if (videoRef.current?.srcObject) {
-        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-        tracks.forEach((track) => track.stop());
-        videoRef.current.srcObject = null;
-      }
-
-      // Automatically handle recording completion after stopping
-      const videoBlob = new Blob(recordedChunksRef.current, { type: "video/webm" });
-      const extractedAudioBlob = await extractAudio(videoBlob);
-
-      // Send the extracted audio to the backend
-      await uploadAudio(extractedAudioBlob);
-    }
-  };
-
-  const extractAudio = async (videoBlob: Blob) => {
-    setProcessing(true);
-
-    // Load FFmpeg if not already loaded
-    await loadFFmpeg();
-
-    // Write the video file to the FFmpeg file system
-    ffmpeg.FS("writeFile", "input.webm", await fetchFile(videoBlob));
-
-    // Run the FFmpeg command to extract audio as a .wav file
-    await ffmpeg.run("-i", "input.webm", "output.wav");
-
-    // Read the extracted audio file
-    const data = ffmpeg.FS("readFile", "output.wav");
-
-    // Create a Blob from the output data
-    const audioBlob = new Blob([data.buffer], { type: "audio/wav" });
-
-    setProcessing(false);
-    return audioBlob;
-  };
-
-  const uploadAudio = async (audioBlob: Blob) => {
-    const formData = new FormData();
-    formData.append("audio", audioBlob, "extracted_audio.wav");
-    formData.append("user", user.email);
-    formData.append("question", selectedQuestion ?? '');
-
-    try {
-      const response = await axios.post(
-        `${baseUrl}/service/upload_audio`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-      console.log("Audio uploaded successfully:", response.data);
-    } catch (error) {
-      console.error("Error uploading audio:", error);
-    }
+    }, 500);
   };
 
   if (isLoading) {
@@ -178,7 +88,7 @@ const Interview = () => {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="border p-2"
+                  className="border p-2 text-black"
                 />
               </div>
               <button onClick={handleNextStep} className="bg-primary-blue text-white mt-4 rounded-full p-2">Next</button>
@@ -193,7 +103,7 @@ const Interview = () => {
                   type="text"
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
-                  className="border p-2"
+                  className="border p-2 text-black"
                 />
               </div>
               <button onClick={handleNextStep} className="bg-primary-blue text-white mt-4 rounded-full p-2">Next</button>
@@ -208,7 +118,7 @@ const Interview = () => {
                   type="text"
                   value={position}
                   onChange={(e) => setPosition(e.target.value)}
-                  className="border p-2"
+                  className="border p-2 text-black"
                 />
               </div>
               <button onClick={handleNextStep} className="bg-primary-blue text-white mt-4 rounded-full p-2">Next</button>
@@ -222,7 +132,7 @@ const Interview = () => {
                 <select
                   value={questionType}
                   onChange={(e) => setQuestionType(e.target.value)}
-                  className="border p-2"
+                  className="border p-2 text-black"
                 >
                   <option value="technical">Technical</option>
                   <option value="behavioral">Behavioral</option>
@@ -239,7 +149,7 @@ const Interview = () => {
                 <select
                   value={recordingType}
                   onChange={(e) => setRecordingType(e.target.value)}
-                  className="border p-2"
+                  className="border p-2 text-black"
                 >
                   <option value="audio">Audio</option>
                   <option value="video">Video</option>
@@ -252,13 +162,20 @@ const Interview = () => {
           {step === 6 && selectedQuestion && (
             <div className={`fade-in ${!stepVisible ? 'fade-out' : ''}`}>
               <AnalysisCard analysis={[selectedQuestion]} title="Interview Question Provided by mockAI" />
-              {recordingType === 'video' && (
-                <>
-                  <video ref={videoRef} className="w-full h-64 border" autoPlay />
-                  <button onClick={stopVideoRecording} className="mt-10 bg-primary-blue text-white rounded-full p-2">
-                    Stop Recording
-                  </button>
-                </>
+              {recordingType === "audio" ? (
+                <VoiceRecorder
+                  selectedQuestion={selectedQuestion}
+                  user={user}
+                  onRecordingComplete={() =>
+                    setIsQuestionAnswered(true)
+                  }
+                />
+              ) : (
+                <VideoRecorder
+                  selectedQuestion={selectedQuestion}
+                  user={user}
+                  onRecordingComplete={() => setIsQuestionAnswered(true)}
+                />
               )}
             </div>
           )}

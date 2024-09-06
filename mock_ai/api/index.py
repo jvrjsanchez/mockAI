@@ -68,7 +68,7 @@ def generate_feedback_prompt(name, company, position, interview_type, question):
         "but remember, many job seekers have interview anxiety. The goal of this feedback is not to be too harsh, "
         "but give brief feedback where {name} can improve. Give a brief feedback on this {interview_type} response of {name} answering the question "
         "'{question}'."
-        "Give them a made-up score from a scale of 60 to 100. Thank {name} for their answer, "
+        "Give them an unbiased score from a scale of 60 to 100 based on the accuracy of their {interview_type} response. Thank {name} for their answer, "
         "and sign your name as 'MockAI'. DO NOT include any markdown in your response. "
         "Encourage {name} to keep coming back to MockAI to practice their interviewing skills."
     ).format(name=name, company=company, position=position, interview_type=interview_type, question=question)
@@ -334,6 +334,8 @@ def generate_interview_question():
         company = request.args.get("company")
         position = request.args.get("position")
         interview_type = request.args.get("interview_type")
+
+        print(f"Name: {name}, Company: {company}, Position: {position}, Interview Type: {interview_type}")
 
         prompt = generate_interview_prompt(
             name, company, position, interview_type)
