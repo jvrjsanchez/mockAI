@@ -6,6 +6,10 @@
   },
   "routes": [
     {
+      "src": "/api/video/(.*)",
+      "dest": "/api/video/upload"
+    },
+    {
       "src": "/api/saveUser",
       "dest": "/api/saveUser"
     },
