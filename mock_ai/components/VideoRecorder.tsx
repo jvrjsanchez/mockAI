@@ -39,16 +39,8 @@ export default function VoiceRecorder({
   const handleToggleRecording = async () => {
     if (isRecording) {
       setIsLoading(true);
-      await stopRecording();
+      stopRecording();
 
-      // Wait until videoBlob and audioBlob are ready before uploading
-
-      if (videoBlob && audioBlob) {
-        await uploadAudio(); // Upload extracted audio
-        await saveVideoUrl(); // Save video URL after stopping recording
-      } else {
-        console.error("Video or audio not ready");
-      }
       setIsLoading(false);
       videoRef.current?.scrollIntoView({ behavior: "smooth" });
     } else {
@@ -56,6 +48,25 @@ export default function VoiceRecorder({
       videoRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  useEffect(() => {
+    const uploadBlobs = async () => {
+      if (videoBlob && audioBlob) {
+        try {
+          await uploadAudio(user, selectedQuestion); // Upload extracted audio
+          // await saveVideoUrl(); // Save video URL after uploading audio
+          setIsLoading(false);
+          videoRef.current?.scrollIntoView({ behavior: "smooth" });
+        } catch (error) {
+          console.error("Error uploading blobs:", error);
+        }
+      }
+    };
+
+    if (videoBlob && audioBlob) {
+      uploadBlobs();
+    }
+  }, [videoBlob, audioBlob]);
 
   return (
     <div className="flex items-center justify-center h-screen w-full">
