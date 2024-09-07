@@ -120,7 +120,7 @@ def upload_audio():
                 audio_file.filename,
                 audio_buffer,
                 {
-                    "addRandomSuffix": "false",
+                    "addRandomSuffix": "true",
                 },
             )
             AUDIO_URL = {"url": buffer_data.get("url")}
