@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useVideoRecorder } from "@/hooks/useVideoRecorder";
 
 interface VoiceRecorderProps {
@@ -13,6 +13,8 @@ export default function VoiceRecorder({
   user,
   onRecordingComplete,
 }: VoiceRecorderProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   const {
     isRecording,
     startRecording,
@@ -22,7 +24,10 @@ export default function VoiceRecorder({
     saveVideoUrl,
     uploadAudio,
     transcript,
-  } = useVideoRecorder();
+    videoBlob,
+    audioBlob,
+  } = useVideoRecorder(videoRef);
+
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -34,14 +39,21 @@ export default function VoiceRecorder({
   const handleToggleRecording = async () => {
     if (isRecording) {
       setIsLoading(true);
-      stopRecording();
+      await stopRecording();
 
       // Wait until videoBlob and audioBlob are ready before uploading
-      await saveVideoUrl(); // Save video URL after stopping recording
-      await uploadAudio(); // Upload extracted audio
+
+      if (videoBlob && audioBlob) {
+        await uploadAudio(); // Upload extracted audio
+        await saveVideoUrl(); // Save video URL after stopping recording
+      } else {
+        console.error("Video or audio not ready");
+      }
       setIsLoading(false);
+      videoRef.current?.scrollIntoView({ behavior: "smooth" });
     } else {
       startRecording();
+      videoRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -71,11 +83,17 @@ export default function VoiceRecorder({
                 <p className="mb-0 text-black">{transcript}</p>
               </div>
             )}
-            {videoUrl && (
-              <div className="mt-4">
-                <video className="w-full" src={videoUrl} controls />
-              </div>
-            )}
+
+            <div className="mt-4">
+              <video
+                ref={videoRef}
+                src={videoUrl || undefined}
+                className="w-full"
+                autoPlay
+                muted
+                controls={!isRecording}
+              />
+            </div>
           </div>
         )}
 
