@@ -396,88 +396,6 @@ def save_results():
     try:
         data = request.get_json()
 
-        # Log the incoming data
-        logging.info(f"Received request data: {data}")
-
-        # Extract user and results
-        user = data.get("user")
-        results = data.get("results")
-
-        # Check if required fields are present
-        if not user or not results:
-            logging.error(f"Missing user or results: {data}")
-            return jsonify({"error": "User and results are required"}), 400
-
-        # Log user retrieval
-        logging.info(f"Looking for user with email: {user}")
-        userObj = User.query.filter_by(email=user).first()
-
-        if not userObj:
-            logging.error(f"User not found: {user}")
-            return jsonify({"error": "User not found"}), 404
-
-        userId = userObj.id
-        logging.info(f"User found. ID: {userId}")
-
-        # Iterate over results and save to DB
-        for result in results:
-            logging.info(
-                f"Processing result for question: {result.get('question')}")
-
-            # Check the most recent result for the user, ordered by updated_at
-            existing_result = Result.query.filter_by(user_id=userId)\
-                                          .order_by(Result.updated_at.desc())\
-                                          .first()
-
-            if existing_result:
-                # Update the most recent existing result
-                logging.info(
-                    f"Updating most recent result for user ID: {userId}")
-                existing_result.transcript = result.get("transcript")
-                existing_result.filler_words = result.get("filler_words")
-                existing_result.audio_url = result.get("audio_url")
-                existing_result.long_pauses = result.get("long_pauses")
-                existing_result.pause_durations = result.get("pause_durations")
-                existing_result.ai_feedback = result.get("ai_feedback")
-                existing_result.video_url = result.get("video_url")
-                existing_result.updated_at = datetime.utcnow()
-                logging.info({existing_result.get_as_dict()})
-            else:
-                # Create a new result if no existing result is found
-                logging.info(f"Inserting new result for user ID: {userId}")
-                new_result = Result(
-                    user_id=userId,
-                    question_id=result.get("question_id"),
-                    question=result.get("question"),
-                    transcript=result.get("transcript"),
-                    audio_url=result.get("audio_url"),
-                    filler_words=result.get("filler_words"),
-                    long_pauses=result.get("long_pauses"),
-                    pause_durations=result.get("pause_durations"),
-                    score=result.get("score"),
-                    interview_date=datetime.utcnow(),
-                    ai_feedback=result.get("ai_feedback"),
-                    video_url=result.get("video_url"),
-                    updated_at=datetime.utcnow()
-                )
-                db.session.add(new_result)
-
-        db.session.commit()
-        logging.info("Results saved successfully")
-        return jsonify({"message": "Results saved successfully"}), 201
-
-    except Exception as e:
-        # Log any exception that occurs
-        logging.error(f"Error occurred: {str(e)}")
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/service/save_results", methods=["POST"])
-def save_results():
-    try:
-        data = request.get_json()
-
         logging.info(f"Received request data: {data}")
 
         user = data.get("user")
@@ -543,7 +461,6 @@ def save_results():
         return jsonify({"message": "Results saved successfully"}), 201
 
     except Exception as e:
-
         logging.error(f"Error occurred: {str(e)}")
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
