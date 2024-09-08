@@ -73,6 +73,14 @@ const Results = () => {
 
   const fetchAIAnalysis = async (fetchedResults: Result[]) => {
     if (email) {
+      const needsAnalysis = fetchedResults.some(
+        (result) => !result.ai_feedback
+      );
+
+      if (!needsAnalysis) {
+        console.log("AI analysis already fetched for all results.");
+        return;
+      }
       setAnalysisLoading(true);
       try {
         const response = await axios.post(
@@ -139,7 +147,7 @@ const Results = () => {
       try {
         await axios.post("/service/save_results", payload);
         toast({
-          className: "bg-[#7fceff] text-[#050614]",
+          variant: "success",
           title: "Saved",
           description: "Your results have been saved successfully.",
         });
@@ -322,7 +330,7 @@ const Results = () => {
 
       <Card className="bg-[#0a0b24] border-[#2e2f61] mb-6">
         <CardHeader>
-          <CardTitle className="text-[#7fceff] flex justify-between items-center">
+          <CardTitle className="text-[#7fceff] flex justify-between items-center mx-auto">
             Mock AI Analysis
             {analysisLoading && (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -337,10 +345,7 @@ const Results = () => {
           ) : (
             <ScrollArea className="h-[200px] w-full rounded-md border p-4">
               {results.map((result, index) => (
-                <div key={index} className="mb-4">
-                  <h3 className="font-semibold mb-2">
-                    Question {index + 1}
-                  </h3>
+                <div key={index} className="mb-1">
                   <p className="text-[#f0f0f0]">
                     {result.ai_feedback || "No analysis available."}
                   </p>
