@@ -68,7 +68,8 @@ def generate_feedback_prompt(name, company, position, interview_type, question):
         "Job seekers submit their {interview_type} responses to questions, and your job is to help them improve. "
         "However, remember that many job seekers experience interview anxiety, so keep the feedback constructive and not too harsh. "
         "Give brief feedback where {name} can improve based on this {interview_type} response to the question: '{question}'. "
-        "Provide an unbiased score on a scale of 60 to 100, in this exact format: 'Here is your score based on our assessment: [score]'. "
+        "Provide a more efficient solution or correct approach to the question. "
+        "Provide an unbiased score on a scale of 60 to 100 based on the technical efficiency of the response, in this exact format: 'Here is your score based on our assessment: [score]'. "
         "Afterward, thank {name} for their response, sign your name as 'MockAI', and encourage {name} to return to MockAI to keep practicing their interview skills. "
         "DO NOT include any markdown in your response."
     ).format(name=name, company=company, position=position, interview_type=interview_type, question=question)
@@ -421,21 +422,45 @@ def save_results():
         # Iterate over results and save to DB
         for result in results:
             logging.info(
-                f"Saving result for question: {result.get('question')}")
-            new_result = Result(
-                user_id=userId,
-                question_id=result.get("question_id"),
-                question=result.get("question"),
-                transcript=result.get("transcript"),
-                filler_words=result.get("filler_word_count"),
-                long_pauses=result.get("long_pauses"),
-                pause_durations=result.get("pause_durations"),
-                score=result.get("score"),
-                interview_date=datetime.utcnow(),
-                ai_feedback=result.get("ai_feedback"),
-                updated_at=datetime.utcnow()
-            )
-            db.session.add(new_result)
+                f"Processing result for question: {result.get('question')}")
+
+            # Check the most recent result for the user, ordered by updated_at
+            existing_result = Result.query.filter_by(user_id=userId)\
+                                          .order_by(Result.updated_at.desc())\
+                                          .first()
+
+            if existing_result:
+                # Update the most recent existing result
+                logging.info(
+                    f"Updating most recent result for user ID: {userId}")
+                existing_result.transcript = result.get("transcript")
+                existing_result.filler_words = result.get("filler_words")
+                existing_result.audio_url = result.get("audio_url")
+                existing_result.long_pauses = result.get("long_pauses")
+                existing_result.pause_durations = result.get("pause_durations")
+                existing_result.ai_feedback = result.get("ai_feedback")
+                existing_result.video_url = result.get("video_url")
+                existing_result.updated_at = datetime.utcnow()
+                logging.info({existing_result.get_as_dict()})
+            else:
+                # Create a new result if no existing result is found
+                logging.info(f"Inserting new result for user ID: {userId}")
+                new_result = Result(
+                    user_id=userId,
+                    question_id=result.get("question_id"),
+                    question=result.get("question"),
+                    transcript=result.get("transcript"),
+                    audio_url=result.get("audio_url"),
+                    filler_words=result.get("filler_words"),
+                    long_pauses=result.get("long_pauses"),
+                    pause_durations=result.get("pause_durations"),
+                    score=result.get("score"),
+                    interview_date=datetime.utcnow(),
+                    ai_feedback=result.get("ai_feedback"),
+                    video_url=result.get("video_url"),
+                    updated_at=datetime.utcnow()
+                )
+                db.session.add(new_result)
 
         db.session.commit()
         logging.info("Results saved successfully")
@@ -443,6 +468,82 @@ def save_results():
 
     except Exception as e:
         # Log any exception that occurs
+        logging.error(f"Error occurred: {str(e)}")
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/service/save_results", methods=["POST"])
+def save_results():
+    try:
+        data = request.get_json()
+
+        logging.info(f"Received request data: {data}")
+
+        user = data.get("user")
+        results = data.get("results")
+
+        if not user or not results:
+            logging.error(f"Missing user or results: {data}")
+            return jsonify({"error": "User and results are required"}), 400
+
+        logging.info(f"Looking for user with email: {user}")
+        userObj = User.query.filter_by(email=user).first()
+
+        if not userObj:
+            logging.error(f"User not found: {user}")
+            return jsonify({"error": "User not found"}), 404
+
+        userId = userObj.id
+        logging.info(f"User found. ID: {userId}")
+
+        for result in results:
+            logging.info(
+                f"Processing result for question: {result.get('question')}")
+
+            existing_result = Result.query.filter_by(user_id=userId)\
+                                          .order_by(Result.updated_at.desc())\
+                                          .first()
+
+            if existing_result:
+
+                logging.info(
+                    f"Updating most recent result for user ID: {userId}")
+                existing_result.transcript = result.get("transcript")
+                existing_result.filler_words = result.get("filler_words")
+                existing_result.audio_url = result.get("audio_url")
+                existing_result.long_pauses = result.get("long_pauses")
+                existing_result.pause_durations = result.get("pause_durations")
+                existing_result.ai_feedback = result.get("ai_feedback")
+                existing_result.video_url = result.get("video_url")
+                existing_result.updated_at = datetime.utcnow()
+                logging.info({existing_result.get_as_dict()})
+            else:
+
+                logging.info(f"Inserting new result for user ID: {userId}")
+                new_result = Result(
+                    user_id=userId,
+                    question_id=result.get("question_id"),
+                    question=result.get("question"),
+                    transcript=result.get("transcript"),
+                    audio_url=result.get("audio_url"),
+                    filler_words=result.get("filler_words"),
+                    long_pauses=result.get("long_pauses"),
+                    pause_durations=result.get("pause_durations"),
+                    score=result.get("score"),
+                    interview_date=datetime.utcnow(),
+                    ai_feedback=result.get("ai_feedback"),
+                    video_url=result.get("video_url"),
+                    updated_at=datetime.utcnow()
+                )
+                db.session.add(new_result)
+
+        db.session.commit()
+        logging.info("Results saved successfully")
+        return jsonify({"message": "Results saved successfully"}), 201
+
+    except Exception as e:
+
         logging.error(f"Error occurred: {str(e)}")
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
