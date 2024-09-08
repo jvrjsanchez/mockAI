@@ -210,6 +210,7 @@ export default function VoiceRecorder({
                   key={videoUrl}
                   className="w-full h-full object-cover"
                   controls
+                  muted
                   crossOrigin="anonymous"
                   onError={() => console.error("Error loading video")}
                 >

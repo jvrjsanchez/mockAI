@@ -9,7 +9,7 @@ interface Question {
 }
 
 interface QuestionsProps {
-  questions: Question[];
+  questions: string;
   selectedQuestion: Question | null;
   onSelectQuestion: (question: Question) => void;
   setNotification: (notification: string | null) => void;

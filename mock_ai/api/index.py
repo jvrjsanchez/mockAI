@@ -74,18 +74,6 @@ def generate_feedback_prompt(name, company, position, interview_type, question):
     ).format(name=name, company=company, position=position, interview_type=interview_type, question=question)
 
 
-@app.route('/api/get_blob_token', methods=['GET'])
-def get_blob_token():
-    try:
-        blob_token = os.getenv('BLOB_READ_WRITE_TOKEN')
-        if not blob_token:
-            return jsonify({'error': 'Blob token not found'}), 404
-        return jsonify({'token': blob_token}), 200
-    except Exception as e:
-        logging.error(f"Error getting blob token: {e}")
-        return jsonify({'error': str(e)}), 500
-
-
 @app.route("/service/upload_audio", methods=["POST"])
 def upload_audio():
     if "audio" not in request.files:
@@ -154,6 +142,8 @@ def upload_audio():
             extract_analysis_results(analysis_results)
         )
 
+        logging.info(f"Transcript: {transcript}")
+
         new_result = Result(
             user_id=userId,
             question_id=1,  # You may need to update this with the actual question ID
@@ -173,8 +163,10 @@ def upload_audio():
         return jsonify(analysis_results)
 
     except json.JSONDecodeError:
+        db.session.rollback()
         return jsonify({"error": "Invalid JSON in question field"}), 400
     except Exception as e:
+        db.session.rollback()
         stack_trace = traceback.format_exc()
         logging.error(f"Exception occurred: {e}\n{stack_trace}")
         return jsonify({"error": "An internal error occurred. Please try again later."}), 500
@@ -289,6 +281,7 @@ def generate_ai_response():
             logging.error("Response text is not a string")
             if 'error' in gemini_response and '429' in gemini_response['error']:
                 return jsonify({'response': 'Something went wrong. Our AI cannot analyze your answer right now. Please try again later.'}), 429
+
             return jsonify({"error": "Invalid response format from Gemini"}), 500
 
     except Exception as e:
@@ -347,9 +340,11 @@ def add_question_route():
         return jsonify({"message": "Question added successfully"}, 201)
 
     except json.JSONDecodeError:
+        db.session.rollback()
         return jsonify({"error": "Invalid JSON in request body"}), 400
     except Exception as e:
         stack_trace = traceback.format_exc()
+        db.session.rollback()
         logging.error(f"Exception occurred: {e}\n{stack_trace}")
         return jsonify({"error": "An internal error occurred. Please try again later."}), 500
 
@@ -387,12 +382,11 @@ def generate_interview_question():
             random_question = Question.query.order_by(
                 db.func.random()).first()
             if random_question:
-                sanitized_question = sanitize_question(
-                    random_question.question, name, company, position)
-                return sanitized_question
+                return random_question.question
 
             else:
                 return jsonify({"error": "No questions available in the database"}), 500
+
         return jsonify({"error": str(e)}), 500
 
 
@@ -474,6 +468,7 @@ def get_results():
             return jsonify({"message": "No results found"}), 404
 
     except Exception as e:
+
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
 

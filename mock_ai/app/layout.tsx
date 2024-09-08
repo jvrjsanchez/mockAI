@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import { UserProvider } from "@auth0/nextjs-auth0/client";
 import { cn } from "@/lib/utils";
 import { Header, Footer } from "@/components/";
+import { Toaster } from "@/components/ui/toaster";
 
 const fontHeading = Inter({
   subsets: ["latin"],
@@ -50,6 +51,7 @@ export default function RootLayout({
           <div className="min-h-screen flex flex-col  bg-[#0a0b2e] text-white">
             <Header />
             <main className="flex-grow">{children}</main>
+            <Toaster />
             <Footer />
           </div>
         </body>
