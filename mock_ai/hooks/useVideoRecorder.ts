@@ -1,7 +1,11 @@
 "use client";
 import type { PutBlobResult } from "@vercel/blob";
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { fetchFile } from "@ffmpeg/util";
+
 import { useRef, useState, useEffect } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
+import { v4 as uuid } from "uuid";
 import axios from "axios";
 
 declare global {
@@ -38,6 +42,8 @@ export const useVideoRecorder = (
   >(null);
   const [isUploading, setIsUploading] = useState(false);
   const [hasUploaded, setHasUploaded] = useState(false);
+
+  const id_unique = uuid();
 
   const { user } = useUser();
 
@@ -80,8 +86,11 @@ export const useVideoRecorder = (
         const videoUrl = URL.createObjectURL(videoBlob);
         setVideoUrl(videoUrl); // Set a front-end URL for preview
 
+        console.log("Video Blob:", videoBlob); // Should output a Blob object
+        console.log("Video URL:", videoUrl);
+
         // Extract audio from video
-        const extractedAudioBlob = await extractAudioFromVideo(
+        const extractedAudioBlob = await handleAudioExtraction(
           videoBlob
         );
         console.log("Extracted audioBlob:", extractedAudioBlob); // Debugging log
@@ -162,125 +171,36 @@ export const useVideoRecorder = (
     setRecordingComplete(true);
   };
 
-  // Function to extract audio from video Blob
-  const extractAudioFromVideo = async (
-    videoBlob: Blob
-  ): Promise<Blob> => {
-    return new Promise<Blob>((resolve) => {
-      const audioContext = new AudioContext();
-      const fileReader = new FileReader();
+  async function handleAudioExtraction(file: Blob) {
+    const ffmpeg = new FFmpeg();
+    await ffmpeg.load({ log: true });
 
-      fileReader.onloadend = async () => {
-        const audioBuffer = await audioContext.decodeAudioData(
-          fileReader.result as ArrayBuffer
-        );
-
-        // Offline audio context for rendering
-        const offlineAudioContext = new OfflineAudioContext(
-          audioBuffer.numberOfChannels,
-          audioBuffer.length,
-          audioBuffer.sampleRate
-        );
-
-        // Create a buffer source to process audio
-        const audioBufferSource =
-          offlineAudioContext.createBufferSource();
-        audioBufferSource.buffer = audioBuffer;
-        audioBufferSource.connect(offlineAudioContext.destination);
-        audioBufferSource.start(0);
-
-        // Render and create a valid WAV file from the audio data
-        offlineAudioContext
-          .startRendering()
-          .then((renderedBuffer) => {
-            const wavBlob = bufferToWavBlob(renderedBuffer);
-            resolve(wavBlob);
-          });
-      };
-
-      fileReader.readAsArrayBuffer(videoBlob);
-    });
-  };
-
-  // Utility function to convert an audio buffer to a WAV Blob
-  const bufferToWavBlob = (audioBuffer: AudioBuffer): Blob => {
-    const numberOfChannels = audioBuffer.numberOfChannels;
-    const sampleRate = audioBuffer.sampleRate;
-    const samples = audioBuffer.length;
-    const format = 1; // PCM
-    const bitDepth = 16;
-
-    let header = new ArrayBuffer(44);
-    let view = new DataView(header);
-
-    // "RIFF" chunk descriptor
-    writeString(view, 0, "RIFF");
-    view.setUint32(
-      4,
-      36 + (samples * numberOfChannels * bitDepth) / 8,
-      true
-    ); // File size
-    writeString(view, 8, "WAVE");
-
-    // "fmt " sub-chunk
-    writeString(view, 12, "fmt ");
-    view.setUint32(16, 16, true); // Subchunk1Size (PCM)
-    view.setUint16(20, format, true); // AudioFormat
-    view.setUint16(22, numberOfChannels, true); // NumChannels
-    view.setUint32(24, sampleRate, true); // SampleRate
-    view.setUint32(
-      28,
-      (sampleRate * numberOfChannels * bitDepth) / 8,
-      true
-    ); // ByteRate
-    view.setUint16(32, (numberOfChannels * bitDepth) / 8, true); // BlockAlign
-    view.setUint16(34, bitDepth, true); // BitsPerSample
-
-    // "data" sub-chunk
-    writeString(view, 36, "data");
-    view.setUint32(
-      40,
-      (samples * numberOfChannels * bitDepth) / 8,
-      true
-    ); // DataSize
-
-    // Combine header and audio data
-    let audioData = audioBufferToWavData(audioBuffer, bitDepth);
-    return new Blob([header, audioData], { type: "audio/wav" });
-  };
-
-  // Helper to write string to a DataView
-  const writeString = (
-    view: DataView,
-    offset: number,
-    string: string
-  ) => {
-    for (let i = 0; i < string.length; i++) {
-      view.setUint8(offset + i, string.charCodeAt(i));
-    }
-  };
-
-  // Convert the raw audio buffer data to a format compatible with WAV files
-  const audioBufferToWavData = (
-    audioBuffer: AudioBuffer,
-    bitDepth: number
-  ): ArrayBuffer => {
-    const numberOfChannels = audioBuffer.numberOfChannels;
-    const sampleLength = audioBuffer.length;
-    const result = new ArrayBuffer(
-      sampleLength * numberOfChannels * (bitDepth / 8)
+    await ffmpeg.writeFile(
+      `${id_unique}.webm`,
+      await fetchFile(file)
     );
-    const view = new DataView(result);
+    await ffmpeg.exec([
+      "-i",
+      `${id_unique}.webm`,
+      "-vn", // means no video.
+      "-acodec",
+      "libmp3lame",
+      "-ac",
+      "1",
+      "-ar",
+      "16000",
+      "-f",
+      "mp3",
+      `${id_unique}.mp3`,
+    ]);
 
-    for (let channel = 0; channel < numberOfChannels; channel++) {
-      const buffer = audioBuffer.getChannelData(channel);
-      for (let i = 0; i < sampleLength; i++) {
-        view.setInt16(i * 2, buffer[i] * 32767, true);
-      }
-    }
+    // This reads the converted file from the file system
+    const fileData = await ffmpeg.readFile(`${id_unique}.mp3`);
+    // This creates a new file from the raw data
+    const output = new Blob([fileData.buffer], { type: "audio/mp3" });
 
-    return result;
-  };
+    return output;
+  }
 
   const generateUniqueFilename = (
     baseName: string,
@@ -374,8 +294,11 @@ export const useVideoRecorder = (
       return;
     }
 
+    // I am extracting the audio from the video
+    const file = await handleAudioExtraction(audioBlob);
+
     const formData = new FormData();
-    formData.append("audio", audioBlob, "extracted_audio.wav");
+    formData.append("audio", file, `${id_unique}.mp3`);
     formData.append("user", user.email);
     formData.append("question", question);
 
