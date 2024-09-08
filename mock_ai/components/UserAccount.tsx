@@ -19,7 +19,9 @@ const UserAccount = () => {
           headers: { "Content-Type": "application/json" },
         })
         .then((response) => {
-          setResults(Array.isArray(response.data) ? response.data : []);
+          setResults(
+            Array.isArray(response.data) ? response.data : []
+          );
         })
         .catch((error) => {
           console.error("Error fetching results:", error);
@@ -40,7 +42,9 @@ const UserAccount = () => {
 
   // Delete a result
   const handleDelete = (resultId: number) => {
-    if (window.confirm("Are you sure you want to delete this result?")) {
+    if (
+      window.confirm("Are you sure you want to delete this result?")
+    ) {
       axios
         .delete(`/service/delete_result/${resultId}`, {
           headers: { "Content-Type": "application/json" },
@@ -58,7 +62,9 @@ const UserAccount = () => {
   };
 
   // Handle feedback selection
-  const handleFeedbackChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleFeedbackChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const feedbackId = e.target.value;
     const feedback = results.find((r) => r.id === feedbackId);
     setSelectedFeedback(feedback);
@@ -73,7 +79,9 @@ const UserAccount = () => {
     return (
       <div className="hero">
         <div className="flex-1 pt-36 padding-x">
-          <h1 className="text-2xl font-bold">mockAI User Account Page</h1>
+          <h1 className="text-2xl font-bold">
+            mockAI User Account Page
+          </h1>
           <p>Please sign in to view your account.</p>
           <button className="bg-primary-blue text-white mt-4 rounded-full p-2">
             <a href="/api/auth/login">Sign In</a>
@@ -101,7 +109,9 @@ const UserAccount = () => {
           </div>
         </div>
 
-        <h1 className="text-2xl font-bold mt-8">Your Interview Results</h1>
+        <h1 className="text-2xl font-bold mt-8">
+          Your Interview Results
+        </h1>
 
         {/* Sort by Date */}
         <div className="flex items-center justify-between mt-4 text-black">
@@ -126,30 +136,38 @@ const UserAccount = () => {
                 key={result.id}
                 className="result-card p-4 border rounded-md bg-white shadow-sm"
               >
-                <h2 className="text-lg font-bold mb-2">{result.question}</h2>
+                <h2 className="text-lg font-bold mb-2">
+                  {result.question}
+                </h2>
                 <div className="text-sm space-y-1">
                   <p>
                     <strong>Score:</strong> {result.score}
                   </p>
                   <p>
                     <strong>Transcript:</strong>{" "}
-                    <span className="block truncate">{result.transcript}</span>
+                    <span className="block truncate">
+                      {result.transcript}
+                    </span>
                   </p>
                   <p>
-                    <strong>Filler Words:</strong> {result.filler_words}
+                    <strong>Filler Words:</strong>{" "}
+                    {result.filler_words}
                   </p>
                   <p>
                     <strong>Long Pauses:</strong> {result.long_pauses}
                   </p>
                   <p>
-                    <strong>Pause Durations:</strong> {result.pause_durations}
+                    <strong>Pause Durations:</strong>{" "}
+                    {result.pause_durations}
                   </p>
                   <p>
                     <strong>AI Feedback:</strong> {result.ai_feedback}
                   </p>
                   <p>
                     <strong>Interview Date:</strong>{" "}
-                    {new Date(result.interview_date).toLocaleDateString()}
+                    {new Date(
+                      result.interview_date
+                    ).toLocaleDateString()}
                   </p>
 
                   {/* Check if video is available */}
@@ -157,6 +175,7 @@ const UserAccount = () => {
                     <div className="mt-2">
                       <video
                         controls
+                        preload="metadata"
                         src={result.video_url}
                         className="w-full rounded-md"
                       />

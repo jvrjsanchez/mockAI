@@ -2,7 +2,7 @@ import Interview from "@/components/Interview";
 
 export default function interview() {
   return (
-    <main className="overflow-hidden min-h-screen">
+    <main className="min-h-screen">
       <Interview />
     </main>
   );

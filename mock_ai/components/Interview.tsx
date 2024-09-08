@@ -5,6 +5,7 @@ import axios from "axios";
 import AnalysisCard from "./AnalysisCard";
 import VoiceRecorder from "./VoiceRecorder";
 import VideoRecorder from "./VideoRecorder";
+import { Button } from "./ui/Button";
 
 const Interview = () => {
   const { user, error, isLoading } = useUser();
@@ -74,8 +75,8 @@ const Interview = () => {
   if (!user) {
     return (
       <div className="hero">
-        <div className="flex-1 pt-36 padding-x">
-          <h1 className="text-2xl font-bold">
+        <div className="flex-1 pt-36 padding-x mx-auto">
+          <h1 className="text-2xl font-bold text-center">
             Interview Meeting Room
           </h1>
           <p className="text-lg mt-4">
@@ -93,7 +94,7 @@ const Interview = () => {
     return (
       <div className="hero items-center sm:flex-row sm:items-start">
         <div className="flex-1 pt-36 padding-x w-full sm:w-1/2">
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-md md:text-3xl lg:text-4xl font-bold text-center mb-5">
             Interview Meeting Room
           </h1>
 
@@ -216,8 +217,9 @@ const Interview = () => {
               className={`fade-in ${!stepVisible ? "fade-out" : ""}`}
             >
               <AnalysisCard
-                analysis={[selectedQuestion]}
+                content={[selectedQuestion]}
                 title="Interview Question Provided by mockAI"
+                type="question"
               />
               {recordingType === "audio" ? (
                 <VoiceRecorder
@@ -239,12 +241,12 @@ const Interview = () => {
             </div>
           )}
 
-          <button
+          <Button
             className="bg-primary-blue text-white mt-10 rounded-full"
             onClick={() => (window.location.href = "/results")}
           >
             View Results
-          </button>
+          </Button>
         </div>
       </div>
     );

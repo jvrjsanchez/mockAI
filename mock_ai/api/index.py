@@ -113,6 +113,7 @@ def upload_audio():
             filler_words=True,
             utterances=True,
             utt_split=10000,
+
         )
 
         if IS_PRODUCTION:
@@ -123,11 +124,15 @@ def upload_audio():
                     "addRandomSuffix": "true",
                 },
             )
+
             AUDIO_URL = {"url": buffer_data.get("url")}
 
             response = deepgram.listen.prerecorded.v("1").transcribe_url(
                 AUDIO_URL, options
             )
+
+            print(response.to_json(indent=4))
+
         else:
             payload: FileSource = {
                 "buffer": audio_buffer,
@@ -201,8 +206,10 @@ def save_video_url():
             return jsonify({"message": "Video successfully uploaded to the database"}), 201
         else:
             return jsonify({"message": "No video has been added to the database"}), 404
+
     except Exception as e:
         logging.error(f"Error saving video URL: {e}")
+        db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
 
