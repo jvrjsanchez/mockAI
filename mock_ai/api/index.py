@@ -1,5 +1,6 @@
 from .extensions import db
 from flask import request, jsonify, session
+import time
 import requests
 from sqlalchemy import desc
 from sqlalchemy.exc import SQLAlchemyError
@@ -38,6 +39,14 @@ logging.basicConfig(level=logging.ERROR)
 deepgram = DeepgramClient(os.getenv("DG_API_KEY"))
 
 IS_PRODUCTION = os.getenv("FLASK_ENV") == "production"
+
+# generator fn to retry
+
+
+def retry(max_retries, delay):
+    for attempt in range(max_retries):
+        yield attempt
+        time.sleep(delay)
 
 
 def generate_interview_prompt(name, company, position, interview_type):
@@ -82,8 +91,8 @@ def upload_audio():
     elif "user" not in request.form or "question" not in request.form:
         return jsonify({"error": "User and question are required"}), 400
 
-    user_email = request.form.get("user")
-    question = request.form.get("question")
+    user_email = request.form.get("user").strip()
+    question = request.form.get("question").strip()
 
     AUDIO_URL = None
 
@@ -120,8 +129,6 @@ def upload_audio():
                 AUDIO_URL, options
             )
 
-            print(response.to_json(indent=4))
-
         else:
             payload: FileSource = {
                 "buffer": audio_buffer,
@@ -145,9 +152,26 @@ def upload_audio():
 
         logging.info(f"Transcript: {transcript}")
 
+        # delay to allow the question to be added to the db first.
+        time.sleep(2)
+
+        # get the question id from the db so save as a reference.
+        question_record = Question.query.filter_by(question=question).first()
+
+        # log the previous raw query
+        logging.info(
+            f"Previous raw query: {db.session.query(Question).filter(Question.question.ilike(f'%{question}%')).first()}")
+
+        if not question_record:
+            logging.error(f"Question not found: {question}")
+            return jsonify({"error": "Question not found"}), 404
+
+        question_id = question_record.id
+        logging.info(f"Question ID: {question_id}")
+
         new_result = Result(
             user_id=userId,
-            question_id=1,  # You may need to update this with the actual question ID
+            question_id=question_id,
             question=question,
             transcript=transcript,
             audio_url=AUDIO_URL["url"] if AUDIO_URL else None,
@@ -159,7 +183,14 @@ def upload_audio():
             ),
         )
         db.session.add(new_result)
+
+        # Measure commit time
+        start_time = time.time()
         db.session.commit()
+        end_time = time.time()
+
+        commit_duration = end_time - start_time
+        logging.info(f"Commit took {commit_duration:.4f} seconds")
 
         return jsonify(analysis_results)
 
@@ -179,26 +210,47 @@ def save_video_url():
         data = request.get_json()
         user_email = data.get("user")
         video_url = data.get("video_url")
-        user = user_email
+        question_text = data.get("question")
 
         if not user_email or not video_url:
             return jsonify({"error": "User and video URL are required"}), 400
 
         logging.info(f"Received video URL: {video_url}")
 
-        user_record = User.query.filter_by(email=user).first()
+        user_record = User.query.filter_by(email=user_email).first()
         if not user_record:
             return jsonify({"error": "User not found"}), 404
 
         userId = user_record.id
-        last_updated_result = Result.query.filter_by(
-            user_id=userId).order_by(desc(Result.updated_at)).first()
-        if last_updated_result:
-            last_updated_result.video_url = video_url
-            db.session.commit()
-            return jsonify({"message": "Video successfully uploaded to the database"}), 201
-        else:
-            return jsonify({"message": "No video has been added to the database"}), 404
+
+        max_retries = 5
+        retry_delay = 5  # seconds
+
+        for attempt in retry(max_retries, retry_delay):
+            if attempt > 0:
+                logging.info(
+                    f"Attempt {attempt + 1}/{max_retries}: No updated results found, retrying in {retry_delay} seconds...")
+
+            question_record = db.session.query(Question).filter(
+                Question.question.ilike(f"%{question_text}%")).first()
+
+            question_id = question_record.id if question_record else None
+
+            if not question_id:
+                logging.error(f"Question not found: {question_text}")
+                return jsonify({"error": "Question not found"}), 404
+
+            last_updated_result = Result.query.filter_by(
+                user_id=userId, question_id=question_id).first()
+
+            if last_updated_result:
+                last_updated_result.video_url = video_url
+                db.session.commit()
+                logging.info(
+                    f"Video URL saved for user {user_email} on attempt {attempt + 1}")
+                return jsonify({"message": "Video successfully uploaded to the database"}), 201
+
+        return jsonify({"message": "No video has been added to the database"}), 404
 
     except Exception as e:
         logging.error(f"Error saving video URL: {e}")
@@ -249,12 +301,6 @@ def generate_ai_response():
         with open(file_path, 'wb') as f:
             f.write(file_res.content)
 
-        if result.video_url:
-            audio_path = '/tmp/extracted_audio.wav'
-            # video_clip = VideoFileClip(file_path) # currently commented out because we are not using moviepy.
-            # video_clip.audio.write_audiofile(audio_path)
-            file_path = audio_path
-
         with open(file_path, 'rb') as audio_file:
             audio_content = audio_file.read()
 
@@ -265,6 +311,7 @@ def generate_ai_response():
 
         logging.info(f"Received response from Gemini: {gemini_response}")
 
+        # extract and save the score to the results table.
         if isinstance(gemini_response, str):
             logging.info(f"Response text: {gemini_response}")
             extracted_data = extract_score_from_gemini_response(
@@ -273,10 +320,10 @@ def generate_ai_response():
             if score is not None:
                 logging.info(f"Extracted score: {score}")
                 result.score = score
+                db.session.commit()
             else:
                 logging.warning("No score extracted from the response")
 
-            db.session.commit()
             return jsonify({"response": gemini_response})
         else:
             logging.error("Response text is not a string")
@@ -368,10 +415,12 @@ def generate_interview_question():
         gemini_response = text_prompt_for_question(prompt)
 
         if gemini_response:
-            question = gemini_response
-            new_question = Question(question=gemini_response)
+            question = gemini_response.strip()
+            new_question = Question(question=question)
             db.session.add(new_question)
             db.session.commit()
+            logging.info(
+                f"Saved question: {new_question.id} - {new_question.question}")
             return question
         else:
             return jsonify({"error": "No response from Gemini"}), 500
@@ -426,21 +475,17 @@ def save_results():
                                           .first()
 
             if existing_result:
-
                 logging.info(
                     f"Updating most recent result for user ID: {userId}")
-                logging.info(f"result in for in loop: {result}")
-                existing_result.transcript = result.get("transcript")
-                existing_result.filler_words = result.get("filler_word_count")
-                existing_result.audio_url = result.get("audio_url")
-                existing_result.long_pauses = result.get("long_pauses")
-                existing_result.pause_durations = result.get("pause_durations")
                 existing_result.ai_feedback = result.get("ai_feedback")
-                existing_result.video_url = result.get("video_url")
                 existing_result.updated_at = datetime.utcnow()
-                logging.info(existing_result.get_as_dict())
-            else:
 
+                if "video_url" in result:  # Only update video_url if it's part of the result
+                    existing_result.video_url = result.get(
+                        "video_url") or existing_result.video_url
+                db.session.commit()
+
+            else:
                 logging.info(f"Inserting new result for user ID: {userId}")
                 new_result = Result(
                     user_id=userId,
@@ -458,8 +503,8 @@ def save_results():
                     updated_at=datetime.utcnow()
                 )
                 db.session.add(new_result)
+                db.session.commit()
 
-        db.session.commit()
         logging.info("Results saved successfully")
         return jsonify({"message": "Results saved successfully"}), 201
 
@@ -481,15 +526,30 @@ def get_results():
             return jsonify({"error": "User not found"}), 404
 
         userId = user_record.id
-        last_updated_result = Result.query.filter_by(
-            user_id=userId).order_by(desc(Result.updated_at)).first()
-        if last_updated_result:
-            return jsonify(last_updated_result.get_as_dict())
-        else:
-            return jsonify({"message": "No results found"}), 404
+
+        # Retry mechanism to ensure the latest results are fetched
+        max_retries = 5
+        retry_delay = 8  # seconds
+
+        db.session.expire_all()
+
+        for attempt in retry(max_retries, retry_delay):
+            if attempt > 0:
+                logging.info(
+                    f"Attempt {attempt + 1}/{max_retries}: No updated results found, retrying in {retry_delay} seconds...")
+
+            last_updated_result = Result.query.filter_by(
+                user_id=userId).order_by(desc(Result.updated_at)).first()
+            logging.info(str(Result.query.filter_by(
+                user_id=userId).order_by(desc(Result.updated_at))))
+
+            if last_updated_result:
+                return jsonify(last_updated_result.get_as_dict())
+
+        return jsonify({"message": "No results found"}), 404
 
     except Exception as e:
-
+        logging.error(f"An error occurred: {e}")
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
 
