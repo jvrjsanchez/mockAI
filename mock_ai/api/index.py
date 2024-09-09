@@ -415,6 +415,8 @@ def save_results():
         userId = userObj.id
         logging.info(f"User found. ID: {userId}")
 
+        logging.info(f"results: {results}")
+
         for result in results:
             logging.info(
                 f"Processing result for question: {result.get('question')}")
@@ -427,15 +429,16 @@ def save_results():
 
                 logging.info(
                     f"Updating most recent result for user ID: {userId}")
+                logging.info(f"result in for in loop: {result}")
                 existing_result.transcript = result.get("transcript")
-                existing_result.filler_words = result.get("filler_words")
+                existing_result.filler_words = result.get("filler_word_count")
                 existing_result.audio_url = result.get("audio_url")
                 existing_result.long_pauses = result.get("long_pauses")
                 existing_result.pause_durations = result.get("pause_durations")
                 existing_result.ai_feedback = result.get("ai_feedback")
                 existing_result.video_url = result.get("video_url")
                 existing_result.updated_at = datetime.utcnow()
-                logging.info({existing_result.get_as_dict()})
+                logging.info(existing_result.get_as_dict())
             else:
 
                 logging.info(f"Inserting new result for user ID: {userId}")
@@ -445,7 +448,7 @@ def save_results():
                     question=result.get("question"),
                     transcript=result.get("transcript"),
                     audio_url=result.get("audio_url"),
-                    filler_words=result.get("filler_words"),
+                    filler_words=result.get("filler_word_count"),
                     long_pauses=result.get("long_pauses"),
                     pause_durations=result.get("pause_durations"),
                     score=result.get("score"),
