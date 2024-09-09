@@ -3,6 +3,7 @@ import { useUser } from "@auth0/nextjs-auth0/client";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import AnalysisCard from "./AnalysisCard";
+import Link from "next/link";
 import VoiceRecorder from "./VoiceRecorder";
 import VideoRecorder from "./VideoRecorder";
 import { Button } from "./ui/Button";
@@ -240,13 +241,13 @@ const Interview = () => {
               )}
             </div>
           )}
-
-          <Button
-            className="bg-primary-blue text-white mt-10 rounded-full"
-            onClick={() => (window.location.href = "/results")}
-          >
-            View Results
-          </Button>
+          {isQuestionAnswered && (
+            <Link href="/results">
+              <Button className="bg-primary-blue text-white mt-10 rounded-full">
+                View Results
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     );
