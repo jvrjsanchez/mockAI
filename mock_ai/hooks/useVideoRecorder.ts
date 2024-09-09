@@ -29,7 +29,8 @@ interface UseVideoRecorderReturn {
 }
 
 export const useVideoRecorder = (
-  videoRef: React.RefObject<HTMLVideoElement>
+  videoRef: React.RefObject<HTMLVideoElement>,
+  selectedQuestion: string
 ): UseVideoRecorderReturn => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingComplete, setRecordingComplete] = useState(false);
@@ -42,6 +43,7 @@ export const useVideoRecorder = (
   >(null);
   const [isUploading, setIsUploading] = useState(false);
   const [hasUploaded, setHasUploaded] = useState(false);
+  const [readyToUploadVideo, setReadyToUploadVideo] = useState(false);
 
   const id_unique = uuid();
 
@@ -265,6 +267,7 @@ export const useVideoRecorder = (
           {
             user: user?.email,
             video_url: videoUrl,
+            question: selectedQuestion,
           },
           {
             headers: { "Content-Type": "application/json" },
@@ -319,10 +322,16 @@ export const useVideoRecorder = (
   };
 
   useEffect(() => {
-    if (videoBlob && !hasUploaded) {
+    if (videoBlob && !hasUploaded && selectedQuestion.trim() !== "") {
+      setReadyToUploadVideo(true);
+    }
+  }, [videoBlob, selectedQuestion]);
+
+  useEffect(() => {
+    if (readyToUploadVideo && !hasUploaded) {
       saveVideoUrl();
     }
-  }, [videoBlob, hasUploaded]);
+  }, [readyToUploadVideo, hasUploaded]);
 
   useEffect(() => {
     return () => {
