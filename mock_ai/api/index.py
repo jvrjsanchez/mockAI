@@ -19,7 +19,7 @@ import google.generativeai as genai
 from api.genai_utils import text_prompt_for_question, prompt_with_audio_file
 from api.audio_analysis import analyze_audio, extract_score_from_gemini_response
 from api.models import User, Question, Result
-from api.genai_utils import prompt_with_audio_file, extract_analysis_results, sanitize_question
+from api.genai_utils import prompt_with_audio_file, extract_analysis_results
 
 
 # https://github.com/orgs/vercel/discussions/6837
@@ -72,6 +72,14 @@ def generate_interview_prompt(name, company, position, interview_type):
 
 
 def generate_feedback_prompt(name, company, position, interview_type, question):
+
+    # fallback values
+    name = name if name else "Interviewee"
+    company = company if company else "Software Tech Inc."
+    position = position if position else "Software Engineer"
+    interview_type = interview_type if interview_type else "audio"
+    question = question if question else "Tell me about a time you had to work with a difficult team member. How did you handle the situation?"
+
     return (
         "You are an interview feedback analyst for a website called 'MockAI'. {name} has applied for the position of {position} at {company}. "
         "Job seekers submit their {interview_type} responses to questions, and your job is to help them improve. "
@@ -172,7 +180,6 @@ def upload_audio():
         new_result = Result(
             user_id=userId,
             question_id=question_id,
-            question=question,
             transcript=transcript,
             audio_url=AUDIO_URL["url"] if AUDIO_URL else None,
             filler_words=filler_word_count_json,
@@ -262,12 +269,16 @@ def save_video_url():
 def generate_ai_response():
     try:
         data = request.get_json()
-        name = data.get("name")
-        company = data.get("company")
-        position = data.get("position")
-        interview_type = data.get("interview_type")
-        question = data.get("question")
         user_email = data.get("user")
+
+        if not user_email:
+            missing_params = [param for param, value in {
+                'user': user_email,
+            }.items() if not value]
+
+            logging.error(
+                f"Missing required parameters: {', '.join(missing_params)}")
+            return jsonify({"error": f"Missing required parameters: {', '.join(missing_params)}"}), 400
 
         # Log the received data
         logging.info(f"Received data: {data}")
@@ -285,11 +296,11 @@ def generate_ai_response():
             logging.error('No results found for user')
             return jsonify({'error': 'No results found for the user'}), 404
 
-        if not result.audio_url and not result.video_url:
-            logging.error('No audio or video URL found in the result')
-            return jsonify({'error': 'No audio or video URL found in the result'}), 400
+        if not result.audio_url:
+            logging.error('No audio_url found in the result')
+            return jsonify({'error': 'No audio URL found in the result'}), 400
 
-        file_url = result.audio_url if result.audio_url else result.video_url
+        file_url = result.audio_url
         logging.info(f"File URL retrieved from Result table: {file_url}")
 
         file_res = requests.get(file_url)
@@ -303,6 +314,21 @@ def generate_ai_response():
 
         with open(file_path, 'rb') as audio_file:
             audio_content = audio_file.read()
+
+         # Get the question associated with the result.
+        question = result.question_rel
+
+        if not question:
+            logging.error('No associated question found for the result')
+            return jsonify({'error': 'No associated question found for the result'}), 404
+
+        name = question.name
+        company = question.company
+        position = question.position
+        interview_type = question.interview_type
+
+        logging.info(
+            f"Generating feedback for {name} at {company}, position: {position}, interview type: {interview_type}")
 
         # Generate the AI feedback prompt using the user's information
         prompt = generate_feedback_prompt(
@@ -400,14 +426,35 @@ def add_question_route():
 @app.route('/service/generate_interview_question', methods=['GET'])
 def generate_interview_question():
     try:
-        # Assuming you get the name, company, position, and interview_type from the request or session
+
         name = request.args.get("name")
         company = request.args.get("company")
         position = request.args.get("position")
         interview_type = request.args.get("interview_type")
 
+        if not name or not company or not position or not interview_type:
+            missing_params = [param for param, value in {
+                'name': name,
+                'company': company,
+                'position': position,
+                'interview_type': interview_type
+            }.items() if not value]
+
+            logging.error(
+                f"Missing required parameters: {', '.join(missing_params)}")
+            return jsonify({"error": f"Missing required parameters: {', '.join(missing_params)}"}), 400
+
         print(
             f"Name: {name}, Company: {company}, Position: {position}, Interview Type: {interview_type}")
+
+        # Check if the user already has a question for the same interview details
+        existing_question = Question.query.filter_by(
+            name=name, company=company, position=position, interview_type=interview_type
+        ).order_by(Question.id.desc()).first()
+
+        if existing_question:
+            logging.info(f"Using existing question: {existing_question.id}")
+            return existing_question.question
 
         prompt = generate_interview_prompt(
             name, company, position, interview_type)
@@ -416,7 +463,10 @@ def generate_interview_question():
 
         if gemini_response:
             question = gemini_response.strip()
-            new_question = Question(question=question)
+            new_question = Question(question=question, name=name,
+                                    company=company,
+                                    position=position,
+                                    interview_type=interview_type)
             db.session.add(new_question)
             db.session.commit()
             logging.info(
@@ -424,20 +474,14 @@ def generate_interview_question():
             return question
         else:
             return jsonify({"error": "No response from Gemini"}), 500
+    except SQLAlchemyError as db_error:
+        db.session.rollback()
+        logging.error(f"Database error: {db_error}")
+        return jsonify({"error": "Database error, please try again later."}), 500
     except Exception as e:
         db.session.rollback()
-        logging.error(f"Exception: {e}")
-        if "429" in str(e):  # fall back in case quota for gemini is reached.
-            logging.info("429 falling back to random question from database.")
-            random_question = Question.query.order_by(
-                db.func.random()).first()
-            if random_question:
-                return random_question.question
-
-            else:
-                return jsonify({"error": "No questions available in the database"}), 500
-
-        return jsonify({"error": str(e)}), 500
+        logging.error(f"General exception: {e}")
+        return jsonify({"error": "An internal error occurred."}), 500
 
 
 @app.route("/service/save_results", methods=["POST"])
