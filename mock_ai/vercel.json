@@ -1,7 +1,8 @@
 {
   "functions": {
     "api/**": {
-      "excludeFiles": "{.next,*.cache,node_modules,public,app}/**"
+      "excludeFiles": "{.next,*.cache,node_modules,public,app}/**",
+      "maxDuration": 60
     }
   },
   "routes": [
