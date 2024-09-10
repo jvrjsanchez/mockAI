@@ -52,10 +52,10 @@ const Interview = () => {
   };
 
   useEffect(() => {
-    if (user && step === 5) {
+    if (user && step === 5 && !selectedQuestion) {
       fetchQuestion();
     }
-  }, [user, step]);
+  }, [user, step, selectedQuestion]);
 
   const handleNextStep = () => {
     setStepVisible(false);

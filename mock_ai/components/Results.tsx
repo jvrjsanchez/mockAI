@@ -38,6 +38,7 @@ const Results = () => {
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [resultsLoading, setResultsLoading] = useState(true);
   const [email, setEmail] = useState(user?.email);
+  const [resultsSaved, setResultsSaved] = useState(false);
 
   const { toast } = useToast();
 
@@ -120,9 +121,6 @@ const Results = () => {
         variant: "destructive",
         title: "Uh oh! Something went wrong..",
         description: "There was a problem saving your results.",
-        action: (
-          <ToastAction altText="Try again">Try again</ToastAction>
-        ),
       });
       return;
     }
@@ -151,6 +149,7 @@ const Results = () => {
           title: "Saved",
           description: "Your results have been saved successfully.",
         });
+        setResultsSaved(true);
       } catch (error) {
         console.error("Error saving results:", error);
       }
@@ -356,28 +355,31 @@ const Results = () => {
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="saveResults"
-            checked={saveResults}
-            onCheckedChange={handleSaveToggle}
-          />
-          <label
-            htmlFor="saveResults"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+      {/* Hide the save results checkbox and button when the results are already saved.*/}
+      {!resultsSaved && (
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="saveResults"
+              checked={saveResults}
+              onCheckedChange={handleSaveToggle}
+            />
+            <label
+              htmlFor="saveResults"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Save Results
+            </label>
+          </div>
+          <Button
+            onClick={handleSaveResults}
+            className="bg-[#7fceff] text-[#050614] hover:bg-[#7fceff]/90"
+            disabled={!saveResults}
           >
-            Save Results
-          </label>
+            <Save className="mr-2 h-4 w-4" /> Save Results
+          </Button>
         </div>
-        <Button
-          onClick={handleSaveResults}
-          className="bg-[#7fceff] text-[#050614] hover:bg-[#7fceff]/90"
-          disabled={!saveResults}
-        >
-          <Save className="mr-2 h-4 w-4" /> Save Results
-        </Button>
-      </div>
+      )}
 
       <div className="flex justify-between">
         {results.length > 0 && (
