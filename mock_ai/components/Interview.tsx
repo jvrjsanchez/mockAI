@@ -23,10 +23,12 @@ const Interview = () => {
   >("audio");
   const [isQuestionAnswered, setIsQuestionAnswered] = useState(false);
   const [stepVisible, setStepVisible] = useState(true);
+  const [isQuestionFetching, setIsQuestionFetching] = useState(false);
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   const fetchQuestion = async () => {
+    setIsQuestionFetching(true);
     try {
       const response = await axios.get(
         baseUrl
@@ -43,7 +45,9 @@ const Interview = () => {
         }
       );
       setSelectedQuestion(response.data);
+      setIsQuestionFetching(false);
     } catch (error) {
+      setIsQuestionFetching(false);
       console.error(
         "Error fetching interview question from Gemini:",
         error
@@ -217,10 +221,12 @@ const Interview = () => {
             <div
               className={`fade-in ${!stepVisible ? "fade-out" : ""}`}
             >
+              {/* The AnalysisCard is being used to rendeer the question here.*/}
               <AnalysisCard
                 content={[selectedQuestion]}
                 title="Interview Question Provided by mockAI"
                 type="question"
+                isLoading={isQuestionFetching}
               />
               {recordingType === "audio" ? (
                 <VoiceRecorder
