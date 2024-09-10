@@ -8,7 +8,6 @@ import { Progress } from "./ui/progress";
 import { useRouter } from "next/navigation";
 import { Info } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
-import { ToastAction } from "./ui/toast";
 
 import {
   Card,
