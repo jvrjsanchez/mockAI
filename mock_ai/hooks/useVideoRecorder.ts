@@ -1,5 +1,5 @@
 "use client";
-import type { PutBlobResult } from "@vercel/blob";
+import { upload } from "@vercel/blob/client";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
 
@@ -245,21 +245,29 @@ export const useVideoRecorder = (
 
     try {
       console.log("Uploading video to Vercel Blob Store...");
-      const uploadedResponse = await axios.put(
-        baseUrl ? `${baseUrl}/api/video/upload` : `/api/video/upload`,
+      // const uploadedResponse = await axios.put(
+      //   baseUrl ? `${baseUrl}/api/video/upload` : `/api/video/upload`,
 
-        formData,
+      //   formData,
+      //   {
+      //     headers: { "Content-Type": "multipart/form-data" },
+      //   }
+      // );
+      const uploadedResponse = await upload(
+        fileNameUnique,
+        videoBlob,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          access: "public",
+          handleUploadUrl: "/api/video/upload",
+          multipart: true,
         }
       );
 
-      const blob = uploadedResponse.data;
-      const videoUrl = blob.url;
+      const videoUrl = uploadedResponse.url;
 
       setUploadedVideoUrl(videoUrl);
 
-      if (uploadedResponse.status === 200) {
+      if (uploadedResponse.url) {
         const saveResponse = await axios.post(
           baseUrl
             ? `${baseUrl}/service/save_video_url`
