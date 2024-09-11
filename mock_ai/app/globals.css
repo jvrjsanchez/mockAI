@@ -109,3 +109,37 @@
   @apply p-4 mb-4 bg-gray-100 rounded-lg;
 }
 /* END: Result card styles */
+
+/* START: floating emoji styles */
+
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-300px);
+  }
+}
+
+.floating-emoji {
+  position: absolute;
+  bottom: 25%;
+  animation: floatUp 2s ease-in-out forwards;
+  font-size: 2rem;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  @keyframes floatUp {
+    0% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-100px);
+    }
+  }
+}
