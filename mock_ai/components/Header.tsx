@@ -2,10 +2,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useUser } from "@auth0/nextjs-auth0/client";
-import { useState } from "react";
 
 const Header = () => {
-  const { user, error, isLoading } = useUser();
+  const { user } = useUser();
 
   return (
     <header className="px-4 lg:px-6  flex items-center">
@@ -32,12 +31,29 @@ const Header = () => {
         >
           About
         </Link>
-        <Link
-          className="text-sm font-medium hover:text-[#ff3b9a] transition-colors"
-          href="/user_account"
-        >
-          Account
-        </Link>
+        {user ? (
+          <>
+            <Link
+              className="text-sm font-medium hover:text-[#ff3b9a] transition-colors"
+              href="/user_account"
+            >
+              Account
+            </Link>
+            <Link
+              className="text-sm font-medium hover:text-[#ff3b9a] transition-colors"
+              href="/api/auth/logout"
+            >
+              Logout
+            </Link>
+          </>
+        ) : (
+          <Link
+            className="text-sm font-medium hover:text-[#ff3b9a] transition-colors"
+            href="/api/auth/login"
+          >
+            Login
+          </Link>
+        )}
       </nav>
     </header>
   );
