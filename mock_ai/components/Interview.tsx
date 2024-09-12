@@ -95,7 +95,7 @@ const Interview = () => {
       <div className="hero">
         <div className="flex-1 pt-36 padding-x mx-auto">
           <h1 className="text-2xl font-bold text-center">Error</h1>
-          <p className="text-lg mt-4">
+          <p className="text-lg mt-4 text-center">
             Sorry, but there was an error loading the page.
           </p>
         </div>
@@ -110,7 +110,7 @@ const Interview = () => {
           <h1 className="text-2xl font-bold text-center">
             Interview Meeting Room
           </h1>
-          <p className="text-lg mt-4">
+          <p className="text-lg mt-4 text-center">
             Sorry, but you must be signed in to start your interview.
           </p>
           {/* 'asChild prop on the Button allows the a tag to render but keep the styles of the Button.*/}

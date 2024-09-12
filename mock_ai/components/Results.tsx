@@ -175,7 +175,7 @@ const Results = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-[#f0f0f0] mb-4">
+            <p className="text-[#f0f0f0] mb-4 text-center">
               Sorry, but you must be signed in to review your results.
             </p>
             <Button
