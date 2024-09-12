@@ -6,7 +6,9 @@ import AnalysisCard from "./AnalysisCard";
 import Link from "next/link";
 import VoiceRecorder from "./VoiceRecorder";
 import VideoRecorder from "./VideoRecorder";
+import { Skeleton } from "./ui/skeleton";
 import { Button } from "./ui/Button";
+import { Cloud } from "lucide-react";
 
 const Interview = () => {
   const { user, error, isLoading } = useUser();
@@ -23,7 +25,11 @@ const Interview = () => {
   >("audio");
   const [isQuestionAnswered, setIsQuestionAnswered] = useState(false);
   const [stepVisible, setStepVisible] = useState(true);
-  const [isQuestionFetching, setIsQuestionFetching] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isQuestionFetching, setIsQuestionFetching] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(
+    null
+  );
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -48,6 +54,9 @@ const Interview = () => {
       setIsQuestionFetching(false);
     } catch (error) {
       setIsQuestionFetching(false);
+      setErrorMessage(
+        "Failed to fetch the interview question. Please try again."
+      );
       console.error(
         "Error fetching interview question from Gemini:",
         error
@@ -70,11 +79,28 @@ const Interview = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="hero">
+        <div className="flex-1 pt-36 padding-x mx-auto">
+          <h1 className="text-2xl font-bold text-center">
+            Loading...
+          </h1>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div>Error: {error.message}</div>;
+    return (
+      <div className="hero">
+        <div className="flex-1 pt-36 padding-x mx-auto">
+          <h1 className="text-2xl font-bold text-center">Error</h1>
+          <p className="text-lg mt-4">
+            Sorry, but there was an error loading the page.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -87,11 +113,18 @@ const Interview = () => {
           <p className="text-lg mt-4">
             Sorry, but you must be signed in to start your interview.
           </p>
-          <button className="bg-primary-blue text-white mt-10 rounded-full">
-            <a href="/api/auth/login">
-              Sign In to Start Your Interview
-            </a>
-          </button>
+          {/* 'asChild prop on the Button allows the a tag to render but keep the styles of the Button.*/}
+          <div className="flex justify-center">
+            <Button
+              asChild
+              variant={"ghost"}
+              className="bg-primary-blue text-white mt-10 rounded-full"
+            >
+              <a href="/api/auth/login">
+                Sign In to Start Your Interview
+              </a>
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -232,28 +265,76 @@ const Interview = () => {
                 <VoiceRecorder
                   selectedQuestion={selectedQuestion}
                   user={user}
-                  onRecordingComplete={() =>
-                    setIsQuestionAnswered(true)
-                  }
+                  onRecordingComplete={() => {
+                    setIsQuestionAnswered(true);
+                    setIsUploading(false);
+                  }}
+                  setIsUploading={setIsUploading}
                 />
               ) : (
                 <VideoRecorder
                   selectedQuestion={selectedQuestion}
                   user={user}
-                  onRecordingComplete={() =>
-                    setIsQuestionAnswered(true)
-                  }
+                  onRecordingComplete={() => {
+                    setIsQuestionAnswered(true);
+                    setIsUploading(false);
+                  }}
+                  setIsUploading={setIsUploading}
+                  isUploading={isUploading}
                 />
               )}
             </div>
           )}
-          {isQuestionAnswered && (
-            <Link href="/results">
-              <Button className="bg-primary-blue text-white mt-10 rounded-full">
-                View Results
-              </Button>
-            </Link>
+
+          {/* step 6 and possibly loading for question.*/}
+          {step === 6 && !selectedQuestion && (
+            <div className="space-y-4 transition-opacity duration-500">
+              {isQuestionFetching ? (
+                <>
+                  <Skeleton className="h-3 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <Skeleton className="h-3 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <Skeleton className="h-3 w-2/3" />
+                </>
+              ) : errorMessage ? (
+                <div className="bg-[#131538] text-[#b92e1c] border border-[#f18372] p-4 rounded-lg">
+                  <p className="text-lg font-semibold text-center">
+                    {errorMessage}
+                  </p>
+                  <Button
+                    onClick={fetchQuestion}
+                    className="mt-4 bg-primary-blue text-white hover:bg-primary-blue/90 rounded-full"
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : (
+                <p>No question found, please retry.</p>
+              )}
+            </div>
           )}
+
+          {isUploading || isQuestionAnswered ? (
+            <Button
+              variant={"outline"}
+              disabled={isUploading}
+              className={`transition-opacity duration-500 my-2 ease-in-out ${
+                isUploading
+                  ? "bg-[#ff6db3] text-[#050614] hover:bg-[#ff6db3]/90 opacity-100 visible"
+                  : "bg-primary-blue text-white opacity-100 visible"
+              }`}
+            >
+              {isUploading ? (
+                <>
+                  <Cloud className="mr-2 h-4 w-4" /> Uploading...
+                </>
+              ) : (
+                <Link href="/results">View Results</Link>
+              )}
+            </Button>
+          ) : null}
         </div>
       </div>
     );

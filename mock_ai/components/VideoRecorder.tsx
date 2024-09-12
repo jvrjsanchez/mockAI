@@ -3,18 +3,22 @@ import { useEffect, useState, useRef } from "react";
 import { useVideoRecorder } from "@/hooks/useVideoRecorder";
 import { Button } from "./ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
-import { Mic, Pause, Video } from "lucide-react";
+import { Mic, Pause, Video, Rocket } from "lucide-react";
 
 interface VoiceRecorderProps {
   selectedQuestion: string;
   user: any;
   onRecordingComplete: () => void;
+  setIsUploading: (isUploading: boolean) => void;
+  isUploading: boolean;
 }
 
 export default function VoiceRecorder({
   selectedQuestion,
   user,
   onRecordingComplete,
+  setIsUploading,
+  isUploading,
 }: VoiceRecorderProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -33,12 +37,6 @@ export default function VoiceRecorder({
 
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (uploadedVideoUrl) {
-      onRecordingComplete();
-    }
-  }, [uploadedVideoUrl]);
-
   const handleToggleRecording = async () => {
     if (isRecording) {
       setIsLoading(true);
@@ -54,13 +52,17 @@ export default function VoiceRecorder({
 
   useEffect(() => {
     const uploadBlobs = async () => {
+      setIsUploading(true);
+
       if (videoBlob && audioBlob) {
         try {
           await uploadAudio(user, selectedQuestion); // Upload extracted audio
-          // await saveVideoUrl(); // Save video URL after uploading audio
+          onRecordingComplete();
           setIsLoading(false);
           videoRef.current?.scrollIntoView({ behavior: "smooth" });
         } catch (error) {
+          setIsLoading(false);
+          setIsUploading(false);
           console.error("Error uploading blobs:", error);
         }
       }
@@ -125,16 +127,28 @@ export default function VoiceRecorder({
         <div className="flex flex-col items-center mb-8">
           <Button
             onClick={handleToggleRecording}
-            className={`rounded-full p-8 ${
-              isRecording
+            disabled={isUploading}
+            className={`rounded-full p-8 transition-all duration-300 ${
+              isUploading
+                ? "bg-[#ff6db3] text-[#050614] cursor-not-allowed"
+                : isRecording
                 ? "bg-[#ff6db3] hover:bg-[#ff6db3]/90"
                 : "bg-[#7fceff] hover:bg-[#7fceff]/90"
             }`}
             aria-label={
-              isRecording ? "Stop Recording" : "Start Recording"
+              isUploading
+                ? "Uploading..."
+                : isRecording
+                ? "Stop Recording"
+                : "Start Recording"
             }
           >
-            {isRecording ? (
+            {isUploading ? (
+              <>
+                <Rocket className="h-8 w-8 text-[#7fceff] animate-bounce" />
+                <span className="ml-2">Uploading...</span>
+              </>
+            ) : isRecording ? (
               <Pause className="h-8 w-8 text-[#050614]" />
             ) : (
               <Mic className="h-8 w-8 text-[#050614]" />
