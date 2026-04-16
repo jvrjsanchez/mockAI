@@ -24,7 +24,7 @@ export default function Team() {
                     alt="Javier Sanchez"
                 />
 
-                  <h3 className="font-semibold text-xl">Javier Sanches</h3>
+                  <h3 className="font-semibold text-xl">Javier Sanchez</h3>
                   <p className="text-gray-600">Product Owner / Technical Lead</p>
                   <a
                     href="https://github.com/jvrjsanchez"
